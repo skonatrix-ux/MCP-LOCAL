@@ -1,0 +1,515 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+    :root {
+        --gb-blue: #3dabde;
+        --side-padding: clamp(1.5rem, 6vw, 8rem);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { overflow-x: hidden; margin: 0; padding: 0; scroll-behavior: smooth; }
+
+    .gb-wrapper {
+        font-family: 'Roboto', sans-serif !important;
+        background-color: #ffffff;
+        color: #000;
+        overflow-x: hidden;
+    }
+
+    /*
+     * REVEAL SYSTEM
+     * Content is VISIBLE by default.
+     * JS adds .gb-js to the wrapper, which opts elements into animation.
+     * If JS is blocked/stripped by WordPress, everything shows normally.
+     */
+    .gb-js .reveal {
+        opacity: 0;
+        transform: translateY(40px);
+        transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gb-js .reveal.from-left  { transform: translateX(-55px); }
+    .gb-js .reveal.from-right { transform: translateX(55px); }
+    .gb-js .reveal.scale-in   { transform: scale(0.94) translateY(20px); }
+    .gb-js .reveal.visible,
+    .reveal.visible           { opacity: 1 !important; transform: none !important; }
+
+    /* Staggered children — also gated behind .gb-js */
+    .gb-js .reveal-stagger > * {
+        opacity: 0;
+        transform: translateY(28px);
+        transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .gb-js .reveal-stagger.visible > *:nth-child(1) { opacity:1; transform:none; transition-delay:.05s; }
+    .gb-js .reveal-stagger.visible > *:nth-child(2) { opacity:1; transform:none; transition-delay:.18s; }
+    .gb-js .reveal-stagger.visible > *:nth-child(3) { opacity:1; transform:none; transition-delay:.31s; }
+    .gb-js .reveal-stagger.visible > *:nth-child(4) { opacity:1; transform:none; transition-delay:.44s; }
+    .gb-js .reveal-stagger.visible > *:nth-child(5) { opacity:1; transform:none; transition-delay:.57s; }
+
+    /* ─── Section Grid ─── */
+    .gb-section-grid {
+        display: grid;
+        grid-template-columns: 1fr minmax(0, 1200px) 1fr;
+        width: 100%;
+        min-height: 100vh;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .gb-content-wrap {
+        grid-column: 2;
+        display: flex;
+        align-items: center;
+        padding: 6rem var(--side-padding);
+        z-index: 2;
+    }
+
+    /* ─── Image Window ─── */
+    .gb-visual-window {
+        position: relative;
+        height: 100vh;
+        min-height: 600px;
+        overflow: hidden;
+        background: #fff;
+    }
+
+    /* Container fills the window exactly — parallax shifts it slightly in JS */
+    .gb-img-container {
+        position: absolute;
+        top: -8%;
+        left: 0;
+        width: 100%;
+        height: 116%; /* small oversize gives parallax room without shrinking image */
+        will-change: transform;
+    }
+    .gb-img-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    /* ─── Split layout ─── */
+    .gb-img-split {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+    }
+    .gb-img-split .split-half {
+        flex: 1;
+        overflow: hidden;
+        position: relative;
+        min-height: 0;
+    }
+    .gb-img-split .split-half .parallax-inner {
+        position: absolute;
+        top: -8%;
+        left: 0;
+        width: 100%;
+        height: 116%;
+        will-change: transform;
+    }
+    .gb-img-split .split-half .parallax-inner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .split-label {
+        position: absolute;
+        bottom: 10px;
+        left: 12px;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: 0.25em;
+        color: #fff;
+        background: rgba(0,0,0,0.5);
+        padding: 4px 8px;
+        text-transform: uppercase;
+        z-index: 2;
+    }
+
+    /*
+     * ─── Desktop breakout layout ───
+     * Override the default 3-col grid with a proper 2-col split so the
+     * visual window takes ~45 % of the viewport instead of the narrow 1fr gutter.
+     */
+    .section-left-img  { grid-template-columns: 45% 55%; }
+    .section-right-img { grid-template-columns: 55% 45%; }
+
+    .section-left-img .gb-visual-window  { grid-column: 1; grid-row: 1; }
+    .section-left-img .gb-content-wrap   { grid-column: 2; }
+
+    .section-right-img .gb-visual-window { grid-column: 2; grid-row: 1; }
+    .section-right-img .gb-content-wrap  { grid-column: 1; justify-content: flex-end; }
+
+    .gb-content-inner { max-width: 600px; width: 100%; }
+
+    /* ─── Hero ─── */
+    .gb-hero {
+        min-height: 80vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 0 var(--side-padding);
+        max-width: 1400px;
+        margin: 0 auto;
+        overflow: hidden;
+    }
+    .gb-hero-title {
+        font-family: 'Roboto', sans-serif !important;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: clamp(3.5rem, 12vw, 10rem);
+        letter-spacing: -0.04em;
+        line-height: 0.9;
+        margin-bottom: 2rem;
+        will-change: transform;
+        display: block;
+    }
+
+    /* ─── Type ─── */
+    .gb-number-label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.3em;
+        color: var(--gb-blue);
+        display: block;
+        margin-bottom: 1.5rem;
+        text-transform: uppercase;
+    }
+    .gb-title {
+        font-family: 'Roboto', sans-serif !important;
+        font-weight: 900;
+        text-transform: uppercase;
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+        margin-bottom: 2rem;
+        display: block;
+    }
+    .gb-price {
+        font-weight: 900;
+        font-size: clamp(3rem, 5vw, 4.5rem);
+        letter-spacing: -0.02em;
+        margin-top: 1.5rem;
+        line-height: 1;
+    }
+
+    /* ─── Themes ─── */
+    .theme-white { background-color: #ffffff; color: #000; }
+    .theme-grey  { background-color: #f4f4f4; color: #000; }
+    .theme-black { background-color: #000000; color: #fff; }
+    .theme-blue  { background-color: var(--gb-blue); color: #fff; }
+
+    .gb-pill-btn {
+        display: inline-flex;
+        padding: 1rem 2rem;
+        border: 1px solid rgba(128,128,128,0.3);
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        margin-top: 1rem;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    .gb-pill-btn:hover { background: rgba(128,128,128,0.1); }
+
+    /* ─── Progress bar ─── */
+    #gb-scroll-progress {
+        position: fixed;
+        top: 0; left: 0;
+        height: 2px;
+        width: 0%;
+        background: var(--gb-blue);
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    /* ─── Tablet + Mobile shared ─── */
+    @media (max-width: 1024px) {
+        .gb-section-grid { display: flex; flex-direction: column; min-height: auto; }
+        .gb-content-wrap { padding: 3.5rem var(--side-padding); }
+
+        /* Let the visual window size to the image naturally — no fixed height, no clipping */
+        .gb-visual-window {
+            width: 100%;
+            height: auto;
+            min-height: 0;
+            overflow: visible;
+            order: -1;
+        }
+
+        /* Image container: flow naturally, not absolutely positioned */
+        .gb-img-container {
+            position: relative;
+            width: 100%;
+            height: auto;
+            top: auto;
+            transform: none !important;
+        }
+        .gb-img-container img {
+            width: 100%;
+            height: auto;
+            object-fit: unset;
+            display: block;
+            background: transparent;
+        }
+
+        /* Split: side by side, each half fills naturally */
+        .gb-img-split {
+            position: relative;
+            inset: auto;
+            display: flex;
+            flex-direction: row;
+        }
+        .gb-img-split .split-half {
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+        .gb-img-split .split-half .parallax-inner {
+            position: relative;
+            width: 100%;
+            height: auto;
+            top: auto;
+            transform: none !important;
+        }
+        .gb-img-split .split-half .parallax-inner img {
+            width: 100%;
+            height: auto;
+            object-fit: unset;
+            display: block;
+            background: transparent;
+        }
+    }
+
+    /* ─── Mobile only ─── */
+    @media (max-width: 639px) {
+        .gb-js .reveal.from-left,
+        .gb-js .reveal.from-right { transform: translateY(40px); }
+    }
+</style>
+
+<div id="gb-scroll-progress"></div>
+
+<div class="gb-wrapper" id="gb-wrapper">
+
+    <!-- Hero -->
+    <header class="gb-hero theme-white">
+        <h1 class="gb-hero-title reveal scale-in" id="hero-title">SPECIALS.</h1>
+        <div class="flex flex-col gap-3 border-t pt-8 border-gray-100 reveal" style="transition-delay:0.25s">
+            <p style="font-family:'Roboto',sans-serif;font-size:clamp(1rem,2.2vw,1.5rem);font-weight:700;letter-spacing:0.2em;color:var(--gb-blue);text-transform:uppercase;margin:0;">GREEK BISTRO, SPECIALS 2026</p>
+            <p style="font-size:10px;color:#aaa;font-weight:700;letter-spacing:0.3em;text-transform:uppercase;line-height:1.8;margin:0;">
+                AUTHENTICITY IN EVERY DETAIL. EXPLORE OUR HANDPICKED DAILY OFFERS.
+            </p>
+        </div>
+    </header>
+
+    <!-- N1 -->
+    <section class="gb-section-grid section-right-img theme-white">
+        <div class="gb-content-wrap">
+            <div class="gb-content-inner reveal-stagger">
+                <span class="gb-number-label">N° 01, DAILY SELECTION</span>
+                <h2 class="gb-title">THE TWENTY DOLLAR DEAL</h2>
+                <div class="flex flex-col gap-6">
+                    <div>
+                        <p class="text-xs font-bold tracking-widest uppercase text-gray-400 mb-2">OPTION A</p>
+                        <p class="text-lg font-bold uppercase tracking-tight">BOWL + DRINK</p>
+                    </div>
+                    <div class="w-12 h-[2px] bg-blue-400"></div>
+                    <div>
+                        <p class="text-xs font-bold tracking-widest uppercase text-gray-400 mb-2">OPTION B</p>
+                        <p class="text-lg font-bold uppercase tracking-tight">GYRO + FRIES + DRINK</p>
+                    </div>
+                </div>
+                <div class="gb-price">$20</div>
+            </div>
+        </div>
+        <div class="gb-visual-window split-window reveal from-right">
+            <div class="gb-img-split">
+                <div class="split-half">
+                    <div class="parallax-inner" data-speed="0.25">
+                        <img src="https://greekbistro.com/wp-content/uploads/2026/04/Untitled-design-2.jpg" alt="Bowl Option">
+                    </div>
+                    <span class="split-label">OPTION A, BOWL</span>
+                </div>
+                <div class="split-half">
+                    <div class="parallax-inner" data-speed="0.35">
+                        <img src="https://greekbistro.com/wp-content/uploads/2026/04/Gemini_Generated_Image_p5rzdcp5rzdcp5rz.png" alt="Gyro Option">
+                    </div>
+                    <span class="split-label">OPTION B, GYRO</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- N2 -->
+    <section class="gb-section-grid section-left-img theme-grey">
+        <div class="gb-content-wrap">
+            <div class="gb-content-inner reveal-stagger">
+                <span class="gb-number-label">N° 02, LUNCH FOR TWO</span>
+                <h2 class="gb-title">THE 211 SPECIAL</h2>
+                <p class="text-lg text-gray-600 font-medium leading-relaxed mb-6">The perfect shared meal: 2 Entrees, 1 Appetizer, and 1 Dessert.</p>
+                <div class="gb-price">$50</div>
+                <p class="text-[10px] font-bold tracking-[0.2em] text-blue-500 mt-4">MON, FRI, 2:30PM - 5:30PM</p>
+            </div>
+        </div>
+        <div class="gb-visual-window reveal from-left">
+            <div class="gb-img-container" data-speed="0.3">
+                <img src="image_a07f21.png" alt="211 Special">
+            </div>
+        </div>
+    </section>
+
+    <!-- N3 -->
+    <section class="gb-section-grid section-right-img theme-black">
+        <div class="gb-content-wrap">
+            <div class="gb-content-inner reveal-stagger">
+                <span class="gb-number-label">N° 03, SUNSET SOCIAL</span>
+                <h2 class="gb-title">HAPPY HOUR SPECIALS</h2>
+                <p class="text-lg text-gray-400 font-medium leading-relaxed mb-8">Celebrate the evening with half-price appetizers, selected craft beers and wines.</p>
+                <div class="gb-pill-btn border-white/20 text-white">DINE-IN ONLY</div>
+            </div>
+        </div>
+        <div class="gb-visual-window reveal from-right">
+            <div class="gb-img-container" data-speed="0.3">
+                <img src="https://greekbistro.com/wp-content/uploads/2026/04/happy-hour.jpg" alt="Happy Hour">
+            </div>
+        </div>
+    </section>
+
+    <!-- N4 -->
+    <section class="gb-section-grid section-left-img theme-white">
+        <div class="gb-content-wrap">
+            <div class="gb-content-inner reveal-stagger">
+                <span class="gb-number-label">N° 04, MIDWEEK EVENT</span>
+                <h2 class="gb-title">WINE WEDNESDAY</h2>
+                <p class="text-lg text-gray-500 font-medium leading-relaxed mb-8">Specialized pricing on our specialty and exclusive collections of wines.</p>
+                <div class="gb-pill-btn">NO COVER CHARGE</div>
+            </div>
+        </div>
+        <div class="gb-visual-window reveal from-left">
+            <div class="gb-img-container" data-speed="0.3">
+                <img src="https://greekbistro.com/wp-content/uploads/2026/04/WINE-WED.jpg" alt="Wine Wednesday">
+            </div>
+        </div>
+    </section>
+
+    <!-- N5 -->
+    <section class="gb-section-grid section-right-img theme-blue">
+        <div class="gb-content-wrap">
+            <div class="gb-content-inner reveal-stagger">
+                <span class="gb-number-label !text-white">N° 05, SOUNDSCAPE</span>
+                <h2 class="gb-title !text-white">BAND NIGHT</h2>
+                <p class="text-lg text-white/90 font-medium leading-relaxed mb-10">Experience the raw energy of live Bouzouki and traditional Mediterranean arrangements.</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="border border-white/20 p-6">
+                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2">OCCASION</p>
+                        <p class="font-bold text-xl uppercase">FRI & SAT</p>
+                    </div>
+                    <div class="border border-white/20 p-6">
+                        <p class="text-[10px] uppercase tracking-widest opacity-60 mb-2">SHOWTIME</p>
+                        <p class="font-bold text-xl uppercase">6:30 PM</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="gb-visual-window reveal from-right">
+            <div class="gb-img-container" data-speed="0.3">
+                <img src="https://greekbistro.com/wp-content/uploads/2026/04/xi11_IkL-scaled.jpeg" alt="Band Night">
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <div class="theme-white border-t border-gray-100 py-24 px-[var(--side-padding)] reveal" style="text-align:center;">
+        <p style="font-family:'Roboto',sans-serif;font-weight:400;text-transform:uppercase;font-size:1.25rem;letter-spacing:0.05em;line-height:1.1;color:#000;">
+            AUTHENTICITY ISN'T OPTIONAL.
+        </p>
+    </div>
+
+</div>
+
+<script>
+(function () {
+    var wrapper = document.getElementById('gb-wrapper');
+    if (!wrapper) return;
+
+    /* Gate all animations behind .gb-js — if this script never runs, content stays fully visible */
+    wrapper.classList.add('gb-js');
+
+    var PARALLAX_BP = 1025;
+    var isParallax  = function () { return window.innerWidth >= PARALLAX_BP; };
+
+    /* Progress bar */
+    var bar = document.getElementById('gb-scroll-progress');
+    function updateBar() {
+        var total = document.documentElement.scrollHeight - window.innerHeight;
+        if (total > 0 && bar) bar.style.width = (window.scrollY / total * 100) + '%';
+    }
+
+    /* Reveal observer */
+    var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+            if (e.isIntersecting) {
+                e.target.classList.add('visible');
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    wrapper.querySelectorAll('.reveal, .reveal-stagger').forEach(function (el) { io.observe(el); });
+
+    /* Parallax targets */
+    var stdTargets   = Array.from(wrapper.querySelectorAll('.gb-img-container[data-speed]')).map(function (el) { return { el: el, speed: +el.dataset.speed }; });
+    var splitTargets = Array.from(wrapper.querySelectorAll('.parallax-inner[data-speed]')).map(function (el) { return { el: el, speed: +el.dataset.speed }; });
+    var heroTitle    = document.getElementById('hero-title');
+    var allP         = stdTargets.concat(splitTargets);
+
+    function resetParallax() {
+        allP.forEach(function (t) { t.el.style.transform = ''; });
+        if (heroTitle) heroTitle.style.transform = '';
+    }
+
+    function runParallax() {
+        if (!isParallax()) { resetParallax(); return; }
+        var vh = window.innerHeight;
+        if (heroTitle) heroTitle.style.transform = 'translateY(' + (window.scrollY * 0.12) + 'px)';
+        allP.forEach(function (t) {
+            var win  = t.el.closest('.gb-visual-window');
+            if (!win) return;
+            var rect  = win.getBoundingClientRect();
+            var delta = (rect.top + rect.height / 2 - vh / 2) * (t.speed * 0.4);
+            t.el.style.transform = 'translateY(' + delta + 'px)';
+        });
+    }
+
+    /* Resize */
+    var wasParallax = isParallax();
+    window.addEventListener('resize', function () {
+        var now = isParallax();
+        if (wasParallax && !now) resetParallax();
+        wasParallax = now;
+        runParallax();
+    }, { passive: true });
+
+    /* Scroll */
+    var ticking = false;
+    window.addEventListener('scroll', function () {
+        updateBar();
+        if (!ticking) {
+            requestAnimationFrame(function () { runParallax(); ticking = false; });
+            ticking = true;
+        }
+    }, { passive: true });
+
+    updateBar();
+    runParallax();
+})();
+</script>
