@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onkooz — Agentic Loop</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    min-height: 100vh;
+    padding: 3rem 2rem 5rem;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: clamp(1.4rem, 3vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: #444;
+    margin-bottom: 3.5rem;
+  }
+
+  /* ─── Layout ─── */
+  .page { max-width: 1000px; margin: 0 auto; }
+
+  /* ─── Section header ─── */
+  .section-head {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: #444;
+    margin-bottom: 1rem;
+    margin-top: 3rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+
+  /* ─── Agent card ─── */
+  .agent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .agent {
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid rgba(255,255,255,0.07);
+    position: relative;
+    overflow: hidden;
+  }
+  .agent::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .agent-icon { font-size: 1.6rem; margin-bottom: 0.6rem; display: block; }
+  .agent-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.4rem;
+  }
+  .agent-trigger {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    display: inline-block;
+    margin-bottom: 0.7rem;
+  }
+  .agent-tasks {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+  .agent-tasks li {
+    font-size: 0.67rem;
+    color: rgba(255,255,255,0.45);
+    padding-left: 1rem;
+    position: relative;
+    line-height: 1.5;
+  }
+  .agent-tasks li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: rgba(255,255,255,0.2);
+  }
+  .agent-output {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.62rem;
+    color: rgba(255,255,255,0.3);
+  }
+  .agent-output strong { color: rgba(255,255,255,0.6); }
+
+  /* colour variants */
+  .a-intake   { background: #0f1a11; } .a-intake::before   { background: #16a34a; }
+  .a-qualify  { background: #111826; } .a-qualify::before  { background: #3b82f6; }
+  .a-route    { background: #1a1000; } .a-route::before    { background: #f59e0b; }
+  .a-deliver  { background: #1a0a1a; } .a-deliver::before  { background: #9333ea; }
+  .a-followup { background: #1a1200; } .a-followup::before { background: #f97316; }
+  .a-report   { background: #0f1a1a; } .a-report::before   { background: #06b6d4; }
+  .a-billing  { background: #1a0a0a; } .a-billing::before  { background: #e11d48; }
+
+  .t-green  { background: rgba(22,163,74,0.15);  color: #4ade80; }
+  .t-blue   { background: rgba(59,130,246,0.15); color: #60a5fa; }
+  .t-amber  { background: rgba(245,158,11,0.15); color: #fbbf24; }
+  .t-purple { background: rgba(147,51,234,0.15); color: #c084fc; }
+  .t-orange { background: rgba(249,115,22,0.15); color: #fb923c; }
+  .t-cyan   { background: rgba(6,182,212,0.15);  color: #22d3ee; }
+  .t-red    { background: rgba(225,29,72,0.15);  color: #fb7185; }
+
+  /* ─── Flow connector ─── */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0 0.5rem;
+    flex-wrap: wrap;
+  }
+  .flow-pill {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(255,255,255,0.05);
+    color: #666;
+    white-space: nowrap;
+  }
+  .flow-arrow { color: #333; font-size: 0.75rem; }
+
+  /* ─── Reporting split ─── */
+  .report-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  .report-card {
+    border-radius: 12px;
+    padding: 1.25rem;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .report-card.internal { background: #0f0f1a; border-color: rgba(99,102,241,0.3); }
+  .report-card.client   { background: #0f1a1a; border-color: rgba(6,182,212,0.3); }
+  .report-card h3 {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.25rem;
+  }
+  .report-card .who {
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    margin-bottom: 0.9rem;
+    opacity: 0.4;
+  }
+  .report-card ul {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .report-card ul li {
+    font-size: 0.67rem;
+    color: rgba(255,255,255,0.45);
+    padding-left: 1rem;
+    position: relative;
+    line-height: 1.5;
+  }
+  .report-card ul li::before { content: '·'; position: absolute; left: 0; color: rgba(255,255,255,0.2); }
+  .report-card .cadence {
+    margin-top: 0.9rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 0.6rem;
+    color: #555;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ─── Stack row ─── */
+  .stack-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+  .stack-pill {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+  }
+  .stack-pill .sp-name { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.2rem; }
+  .stack-pill .sp-role { font-size: 0.62rem; color: #555; line-height: 1.4; }
+  .stack-pill .sp-cost { font-size: 0.6rem; font-weight: 700; margin-top: 0.4rem; }
+
+  /* ─── Loop visual ─── */
+  .loop-banner {
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(6,182,212,0.08));
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 14px;
+    padding: 1.5rem 2rem;
+    margin-top: 1rem;
+    text-align: center;
+  }
+  .loop-banner p {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.9;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .loop-banner p strong { color: #fff; }
+  .loop-title {
+    font-size: 0.58rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: #6366f1;
+    margin-bottom: 0.75rem;
+  }
+
+  @media (max-width: 600px) {
+    .report-split { grid-template-columns: 1fr; }
+    .agent-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>onkooz — Agentic Loop</h1>
+  <p class="subtitle">Automated · Self-running · Reporting for you and your clients</p>
+
+  <!-- THE LOOP -->
+  <div class="loop-banner">
+    <div class="loop-title">The Loop</div>
+    <p>
+      <strong>Lead comes in</strong> → AI validates it → AI scores and routes it →
+      Auto-delivered to client CRM → AI monitors response time →
+      Reminds client if no contact → <strong>Weekly reports auto-generated and sent</strong> →
+      Billing triggered → Loop repeats. <strong>You watch, you don't touch.</strong>
+    </p>
+  </div>
+
+  <!-- AGENTS -->
+  <div class="section-head">The 7 Agents — What Each One Does</div>
+
+  <div class="agent-grid">
+
+    <div class="agent a-intake">
+      <span class="agent-icon">🔍</span>
+      <div class="agent-name">Intake Agent</div>
+      <span class="agent-trigger t-green">Trigger: form submitted</span>
+      <ul class="agent-tasks">
+        <li>Verifies email is real (not disposable)</li>
+        <li>Validates phone number format + carrier check</li>
+        <li>Checks for duplicate leads (same phone/email in last 30 days)</li>
+        <li>Rejects and logs bad submissions automatically</li>
+      </ul>
+      <div class="agent-output"><strong>Output:</strong> Clean lead record saved to Airtable</div>
+    </div>
+
+    <div class="agent a-qualify">
+      <span class="agent-icon">🧠</span>
+      <div class="agent-name">Qualification Agent</div>
+      <span class="agent-trigger t-blue">Trigger: new clean lead</span>
+      <ul class="agent-tasks">
+        <li>AI reads the lead's message/need description</li>
+        <li>Assigns a quality score (1–10) based on specificity</li>
+        <li>Tags the niche (roofing, HVAC, legal, etc.)</li>
+        <li>Flags high-value leads for priority routing</li>
+      </ul>
+      <div class="agent-output"><strong>Output:</strong> Lead scored + tagged in Airtable</div>
+    </div>
+
+    <div class="agent a-route">
+      <span class="agent-icon">🗺️</span>
+      <div class="agent-name">Routing Agent</div>
+      <span class="agent-trigger t-amber">Trigger: lead is scored</span>
+      <ul class="agent-tasks">
+        <li>Matches lead to correct client by niche + zip code</li>
+        <li>Checks if client has capacity (not over monthly limit)</li>
+        <li>If exclusive — assigns to one client only</li>
+        <li>If shared — routes to up to N clients simultaneously</li>
+      </ul>
+      <div class="agent-output"><strong>Output:</strong> Client(s) assigned to lead record</div>
+    </div>
+
+    <div class="agent a-deliver">
+      <span class="agent-icon">⚡</span>
+      <div class="agent-name">Delivery Agent</div>
+      <span class="agent-trigger t-purple">Trigger: client assigned</span>
+      <ul class="agent-tasks">
+        <li>Pushes contact data to client's CRM via webhook/API</li>
+        <li>Sends client instant SMS + email with lead details</li>
+        <li>Logs delivery timestamp in Airtable</li>
+        <li>Updates lead status → "Delivered"</li>
+      </ul>
+      <div class="agent-output"><strong>Output:</strong> Lead in client CRM, client notified</div>
+    </div>
+
+    <div class="agent a-followup">
+      <span class="agent-icon">⏰</span>
+      <div class="agent-name">Follow-Up Agent</div>
+      <span class="agent-trigger t-orange">Trigger: 4 hrs after delivery</span>
+      <ul class="agent-tasks">
+        <li>Checks if client has updated lead status</li>
+        <li>If no action — sends reminder to client automatically</li>
+        <li>At 24hrs — escalates with second reminder</li>
+        <li>At 48hrs — flags for your review (bad client alert)</li>
+      </ul>
+      <div class="agent-output"><strong>Output:</strong> Client response rate tracked</div>
+    </div>
+
+    <div class="agent a-report">
+      <span class="agent-icon">📊</span>
+      <div class="agent-name">Reporting Agent</div>
+      <span class="agent-trigger t-cyan">Trigger: weekly / monthly schedule</span>
+      <ul class="agent-tasks">
+        <li>Pulls all lead data from Airtable</li>
+        <li>Generates your internal report (all clients)</li>
+        <li>Generates per-client report (their leads only)</li>
+        <li>Emails reports automatically — no manual work</li>
+      </ul>
+      <div class="agent-output"><strong>Output:</strong> Reports sent to you + each client</div>
+    </div>
+
+    <div class="agent a-billing">
+      <span class="agent-icon">💳</span>
+      <div class="agent-name">Billing Agent</div>
+      <span class="agent-trigger t-red">Trigger: lead delivered / end of month</span>
+      <ul class="agent-tasks">
+        <li>Counts billable leads delivered per client</li>
+        <li>Deducts any approved bad-lead credits</li>
+        <li>Generates and sends invoice via Stripe/email</li>
+        <li>Flags unpaid invoices after 7 days</li>
+      </ul>
+      <div class="agent-output"><strong>Output:</strong> Invoice sent, revenue tracked</div>
+    </div>
+
+  </div>
+
+  <!-- REPORTING -->
+  <div class="section-head">Reporting — Internal + Client-Facing</div>
+
+  <div class="report-split">
+    <div class="report-card internal">
+      <h3>Your Internal Report</h3>
+      <div class="who">onkooz eyes only</div>
+      <ul>
+        <li>Total leads generated this week / month</li>
+        <li>Leads per client breakdown</li>
+        <li>Bad lead rate (rejection %)</li>
+        <li>Client response rates (who's slow)</li>
+        <li>Revenue per client + total MRR</li>
+        <li>Ad spend vs. leads generated (cost per lead)</li>
+        <li>Overdue invoices</li>
+      </ul>
+      <div class="cadence">Auto-sent to you every Monday 8AM</div>
+    </div>
+    <div class="report-card client">
+      <h3>Client Report</h3>
+      <div class="who">Each client sees only their own data</div>
+      <ul>
+        <li>Leads received this period</li>
+        <li>Lead quality scores breakdown</li>
+        <li>Contact rate (how fast they followed up)</li>
+        <li>Status breakdown: contacted / closed / lost</li>
+        <li>Cost per lead + estimated ROI</li>
+        <li>Upcoming leads (if you have a pipeline)</li>
+      </ul>
+      <div class="cadence">Auto-sent to each client every Monday 8AM</div>
+    </div>
+  </div>
+
+  <!-- AGENT FLOW -->
+  <div class="section-head">Agent Sequence</div>
+
+  <div class="flow-row">
+    <span class="flow-pill">Form Submit</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-pill" style="color:#4ade80">Intake Agent</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-pill" style="color:#60a5fa">Qualify Agent</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-pill" style="color:#fbbf24">Route Agent</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-pill" style="color:#c084fc">Deliver Agent</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-pill" style="color:#fb923c">Follow-Up Agent</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-pill" style="color:#22d3ee">Report Agent</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-pill" style="color:#fb7185">Billing Agent</span>
+    <span class="flow-arrow">↺</span>
+  </div>
+
+  <!-- TOOL STACK -->
+  <div class="section-head">Tool Stack to Run All 7 Agents</div>
+
+  <div class="stack-row">
+    <div class="stack-pill">
+      <div class="sp-name">Make.com</div>
+      <div class="sp-role">Orchestrates the entire loop. Connects every tool.</div>
+      <div class="sp-cost" style="color:#4ade80">Free to start</div>
+    </div>
+    <div class="stack-pill">
+      <div class="sp-name">Airtable</div>
+      <div class="sp-role">Master lead database. Single source of truth.</div>
+      <div class="sp-cost" style="color:#4ade80">Free to start</div>
+    </div>
+    <div class="stack-pill">
+      <div class="sp-name">Claude API</div>
+      <div class="sp-role">Powers qualify + routing agents. Reads and scores leads with AI.</div>
+      <div class="sp-cost" style="color:#fbbf24">~$5–20/mo at scale</div>
+    </div>
+    <div class="stack-pill">
+      <div class="sp-name">Twilio / Resend</div>
+      <div class="sp-role">SMS alerts to clients. Email delivery of leads + reports.</div>
+      <div class="sp-cost" style="color:#fbbf24">Pay per use</div>
+    </div>
+    <div class="stack-pill">
+      <div class="sp-name">Stripe</div>
+      <div class="sp-role">Invoicing and billing agent. Auto-charges clients.</div>
+      <div class="sp-cost" style="color:#fbbf24">2.9% + 30¢/txn</div>
+    </div>
+    <div class="stack-pill">
+      <div class="sp-name">Framer</div>
+      <div class="sp-role">Lead capture pages and forms. You already have this.</div>
+      <div class="sp-cost" style="color:#4ade80">Existing</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
