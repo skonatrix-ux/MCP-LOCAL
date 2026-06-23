@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onkooz — Lead Gen Vulnerability Report</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:'Segoe UI',sans-serif;
+    background:#0a0a0a;
+    color:#fff;
+    padding:3rem 2rem 6rem;
+  }
+  h1 { text-align:center; font-size:clamp(1.3rem,3vw,2rem); font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:.4rem; }
+  .subtitle { text-align:center; font-size:.7rem; letter-spacing:.28em; text-transform:uppercase; color:#444; margin-bottom:.75rem; }
+  .intro { text-align:center; font-size:.72rem; color:#555; max-width:620px; margin:0 auto 3.5rem; line-height:1.8; }
+  .page { max-width:1080px; margin:0 auto; }
+
+  /* ── Section head ── */
+  .sh {
+    font-size:.58rem; font-weight:700; letter-spacing:.35em; text-transform:uppercase;
+    color:#444; margin-bottom:1.25rem; margin-top:3.5rem;
+    padding-bottom:.5rem; border-bottom:1px solid rgba(255,255,255,.05);
+    display:flex; align-items:center; gap:.75rem;
+  }
+  .sh-count {
+    font-size:.55rem; padding:2px 8px; border-radius:999px; font-weight:700; letter-spacing:.1em;
+    background:rgba(239,68,68,.15); color:#f87171;
+  }
+
+  /* ── Vuln card ── */
+  .vuln-list { display:flex; flex-direction:column; gap:1rem; }
+  .vuln {
+    border-radius:12px; border:1px solid; overflow:hidden;
+  }
+  .vuln-head {
+    display:flex; align-items:flex-start; gap:1rem;
+    padding:1.1rem 1.4rem;
+  }
+  .vuln-icon { font-size:1.4rem; flex-shrink:0; margin-top:1px; }
+  .vuln-meta { flex:1; }
+  .vuln-title { font-size:.82rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:.2rem; }
+  .vuln-summary { font-size:.68rem; line-height:1.7; opacity:.6; }
+  .vuln-sev {
+    font-size:.55rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+    padding:3px 10px; border-radius:999px; flex-shrink:0; align-self:flex-start; margin-top:2px;
+  }
+
+  .vuln-body {
+    display:grid; grid-template-columns:1fr 1fr;
+    border-top:1px solid rgba(255,255,255,.05);
+  }
+  .vuln-col { padding:1rem 1.4rem; }
+  .vuln-col:first-child { border-right:1px solid rgba(255,255,255,.05); }
+  .vcol-label {
+    font-size:.55rem; font-weight:700; letter-spacing:.25em; text-transform:uppercase;
+    margin-bottom:.6rem; opacity:.4;
+  }
+  .vuln-col ul { list-style:none; display:flex; flex-direction:column; gap:.4rem; }
+  .vuln-col ul li {
+    font-size:.66rem; color:rgba(255,255,255,.5); padding-left:1rem;
+    position:relative; line-height:1.55;
+  }
+  .vuln-col ul li::before { content:'·'; position:absolute; left:0; }
+  .vuln-col ul li strong { color:rgba(255,255,255,.8); font-weight:600; }
+
+  /* how we solve it */
+  .vuln-solution {
+    padding:.85rem 1.4rem;
+    border-top:1px solid rgba(255,255,255,.05);
+    display:flex; align-items:flex-start; gap:.75rem;
+    font-size:.66rem; line-height:1.65;
+  }
+  .vuln-solution .sol-label {
+    font-size:.52rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
+    padding:2px 8px; border-radius:999px; flex-shrink:0; margin-top:2px; white-space:nowrap;
+  }
+  .vuln-solution .sol-text { color:rgba(255,255,255,.55); }
+  .vuln-solution .sol-text strong { color:#fff; }
+
+  /* severity themes */
+  .sev-critical { background:rgba(239,68,68,.06); border-color:rgba(239,68,68,.2); }
+  .sev-critical .vuln-head { background:rgba(239,68,68,.05); }
+  .sev-critical .vuln-title { color:#f87171; }
+  .sev-critical .vuln-sev { background:rgba(239,68,68,.15); color:#f87171; }
+  .sev-critical .sol-label { background:rgba(239,68,68,.15); color:#f87171; }
+
+  .sev-high { background:rgba(249,115,22,.06); border-color:rgba(249,115,22,.2); }
+  .sev-high .vuln-head { background:rgba(249,115,22,.05); }
+  .sev-high .vuln-title { color:#fb923c; }
+  .sev-high .vuln-sev { background:rgba(249,115,22,.15); color:#fb923c; }
+  .sev-high .sol-label { background:rgba(249,115,22,.15); color:#fb923c; }
+
+  .sev-med { background:rgba(245,158,11,.06); border-color:rgba(245,158,11,.2); }
+  .sev-med .vuln-head { background:rgba(245,158,11,.04); }
+  .sev-med .vuln-title { color:#fbbf24; }
+  .sev-med .vuln-sev { background:rgba(245,158,11,.15); color:#fbbf24; }
+  .sev-med .sol-label { background:rgba(245,158,11,.15); color:#fbbf24; }
+
+  .sev-legal { background:rgba(99,102,241,.06); border-color:rgba(99,102,241,.2); }
+  .sev-legal .vuln-head { background:rgba(99,102,241,.04); }
+  .sev-legal .vuln-title { color:#a5b4fc; }
+  .sev-legal .vuln-sev { background:rgba(99,102,241,.15); color:#a5b4fc; }
+  .sev-legal .sol-label { background:rgba(99,102,241,.15); color:#a5b4fc; }
+
+  /* ── Stat strip ── */
+  .stat-strip {
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+    gap:.75rem; margin-top:1rem;
+  }
+  .stat-card {
+    background:#111; border:1px solid rgba(255,255,255,.07); border-radius:10px;
+    padding:1rem 1.1rem; text-align:center;
+  }
+  .stat-val { font-size:1.6rem; font-weight:800; line-height:1; margin-bottom:.3rem; }
+  .stat-label { font-size:.6rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#555; }
+
+  /* ── onkooz advantage ── */
+  .advantage-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:.75rem; margin-top:1rem; }
+  .adv {
+    background:#111; border:1px solid rgba(34,197,94,.15); border-radius:10px;
+    padding:1rem 1.1rem;
+  }
+  .adv-icon { font-size:1.1rem; margin-bottom:.4rem; }
+  .adv-title { font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#4ade80; margin-bottom:.3rem; }
+  .adv-desc { font-size:.64rem; color:rgba(255,255,255,.4); line-height:1.6; }
+
+  @media(max-width:640px){
+    .vuln-body{ grid-template-columns:1fr; }
+    .vuln-col:first-child{ border-right:none; border-bottom:1px solid rgba(255,255,255,.05); }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Lead Gen Vulnerability Report</h1>
+<p class="subtitle">Industry-wide weaknesses — and how onkooz solves them</p>
+<p class="intro">These are the exact reasons lead generation companies lose money, get sued, or go out of business. Most never fix them. This is your competitive edge.</p>
+
+<!-- ── INDUSTRY STATS ── -->
+<div class="sh">The Scale of the Problem</div>
+<div class="stat-strip">
+  <div class="stat-card"><div class="stat-val" style="color:#f87171;">36%</div><div class="stat-label">of leads are fraudulent or fake on average</div></div>
+  <div class="stat-card"><div class="stat-val" style="color:#fb923c;">$1.2B</div><div class="stat-label">lost annually to lead fraud across the industry</div></div>
+  <div class="stat-card"><div class="stat-val" style="color:#fbbf24;">78%</div><div class="stat-label">of leads go cold if not contacted within 5 minutes</div></div>
+  <div class="stat-card"><div class="stat-val" style="color:#a5b4fc;">$500K+</div><div class="stat-label">average TCPA class action settlement</div></div>
+  <div class="stat-card"><div class="stat-val" style="color:#f87171;">60%</div><div class="stat-label">of lead gen companies fail within 3 years</div></div>
+  <div class="stat-card"><div class="stat-val" style="color:#4ade80;">5min</div><div class="stat-label">contact window before conversion rate drops 80%</div></div>
+</div>
+
+<!-- ════════════════ CRITICAL ════════════════ -->
+<div class="sh">Critical Vulnerabilities <span class="sh-count">business-ending</span></div>
+<div class="vuln-list">
+
+  <div class="vuln sev-critical">
+    <div class="vuln-head">
+      <span class="vuln-icon">🤖</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Lead Farm Fraud — Fake Human Submissions</div>
+        <div class="vuln-summary">Organized operations in low-cost countries pay humans $0.01 per form fill. They submit fake but realistic-looking leads — real names, real area codes, fake interest. You pay for traffic, you deliver junk, clients demand refunds, your reputation is destroyed.</div>
+      </div>
+      <span class="vuln-sev">CRITICAL</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Fraudsters buy your landing page URL from dark web ad intel tools</li>
+          <li>Human click farms fill forms with <strong>real-format but fake data</strong></li>
+          <li>Phone numbers exist but belong to strangers — not the submitter</li>
+          <li>Emails are real throwaway accounts — pass basic validation</li>
+          <li>IPs rotate via residential proxies — hard to block by IP alone</li>
+          <li>Often triggered by <strong>CPA offers</strong> — they get paid per lead submitted</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>You pay ad spend to acquire them</li>
+          <li>Clients get burned calling strangers who are confused or angry</li>
+          <li>Client demands 100% credit — you absorb the loss</li>
+          <li>High refund rate destroys your Stripe account standing</li>
+          <li>Client churns and tells others your leads are garbage</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Multi-signal intake scoring:</strong> carrier lookup (is this a VoIP burner vs. real carrier?), email domain age check (throwaway domains are < 30 days old), behavioral timing (real users take 30–90 seconds to fill a form — bots take 3 seconds), mouse movement entropy scoring. Qualify Agent cross-references all signals before a lead is written to Airtable. Red Team Agent monitors submission velocity patterns nightly.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-critical">
+    <div class="vuln-head">
+      <span class="vuln-icon">⚖️</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">TCPA Violations — Calling Without Proper Consent</div>
+        <div class="vuln-summary">The Telephone Consumer Protection Act requires explicit written consent before a business calls or texts a consumer using an auto-dialer. Most lead gen companies use vague consent language — or none at all. One class action lawsuit can bankrupt a small operation overnight.</div>
+      </div>
+      <span class="vuln-sev">CRITICAL</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Form says "Submit" with no consent disclosure</li>
+          <li>Consent buried in tiny text or a generic privacy policy link</li>
+          <li>Consent doesn't name the specific businesses that will call</li>
+          <li>Lead is sold to 10 clients — each calls — consumer files complaint</li>
+          <li>No timestamp record of when/what the consumer consented to</li>
+          <li>Consumer never consented but was added to a scraped list</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li><strong>$500 per call</strong> for negligent violations</li>
+          <li><strong>$1,500 per call</strong> for willful violations</li>
+          <li>Class actions aggregate thousands of calls — millions in exposure</li>
+          <li>FTC can impose additional fines and operational injunctions</li>
+          <li>Client is liable too — they stop buying from you immediately</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>TCPA-compliant consent layer on every form:</strong> clear checkbox (not pre-checked), consent language that names the category of businesses that will contact them, timestamp + IP logged to Airtable on submission (your proof of consent). Leads table stores <strong>consent_text_version</strong> and <strong>consent_timestamp</strong> fields. Never sell a lead without a consent record. For shared leads — consent must explicitly cover being contacted by multiple businesses.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-critical">
+    <div class="vuln-head">
+      <span class="vuln-icon">♻️</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Aged Lead Reselling — Selling Stale Leads as Fresh</div>
+        <div class="vuln-summary">A common scam within the industry: leads are collected, held for 30–90 days, then sold again as new. The consumer has long since solved their problem or forgotten the inquiry. Clients call a stranger who has no idea what they're talking about. This destroys conversion rates and trust.</div>
+      </div>
+      <span class="vuln-sev">CRITICAL</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Lead vendor buys old lead lists and re-sells them</li>
+          <li>Your own supplier sends you recycled leads without disclosure</li>
+          <li>Leads sit in your queue due to routing failures — go cold</li>
+          <li>No created_at timestamp surfaced to clients — age is hidden</li>
+          <li>Duplicate leads from different form submissions weeks apart</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Client conversion rate tanks — they blame your lead quality</li>
+          <li>Client asks for refund on every lead over 24hrs old</li>
+          <li>You unknowingly become the vendor selling stale leads</li>
+          <li>Industry reputation damage — word travels fast in niche markets</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Lead age transparency:</strong> every lead delivered to clients includes the <strong>exact created_at timestamp</strong> — no hiding the age. Delivery Agent only delivers leads under 24hrs old by default. Leads in the Unrouted queue expire after 7 days and are flagged, not sold. Clients can see lead age in their report. No surprises, no disputes.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════ HIGH ════════════════ -->
+<div class="sh">High Severity Vulnerabilities</div>
+<div class="vuln-list">
+
+  <div class="vuln sev-high">
+    <div class="vuln-head">
+      <span class="vuln-icon">🎭</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Incentivized Leads — People Filling Forms for Rewards</div>
+        <div class="vuln-summary">Common on offer-wall networks and sweepstakes sites. A consumer fills out your roofing lead form to enter a "win a $500 gift card" contest — they have zero intent to buy a roof. They look real, pass all validation, but will never answer the client's call.</div>
+      </div>
+      <span class="vuln-sev">HIGH</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Your ad network routes traffic through offer-wall publishers</li>
+          <li>Consumers on sweepstakes sites fill dozens of forms per day</li>
+          <li>All data is real — they're a real person — but zero purchase intent</li>
+          <li>Traffic source not disclosed by ad network</li>
+          <li>Spikes in lead volume look great on paper — until conversion tanks</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Client call center dials 100 leads, speaks to 2</li>
+          <li>Client demands full refund for entire batch</li>
+          <li>You lose ad spend + refund cost simultaneously</li>
+          <li>Impossible to tell upfront — only visible after the fact</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Intent signal scoring:</strong> Qualify Agent checks specificity of the "what do you need" message — a real buyer describes their problem, an incentivized filler writes "yes" or "asap". Track your ad traffic sources in UTM params stored on the lead record. Kill any publisher source where conversion rate drops below threshold. Never run on offer-wall or broad content networks.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-high">
+    <div class="vuln-head">
+      <span class="vuln-icon">🔁</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Exclusive Lead Double-Selling</div>
+        <div class="vuln-summary">Client pays premium for an "exclusive" lead — meaning only they get it. But the lead gen company sells the same lead to 3 other clients too, pocketing 4x the revenue. This is fraud. When clients compare notes (and they do), you're finished.</div>
+      </div>
+      <span class="vuln-sev">HIGH</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>No technical enforcement — just a policy promise</li>
+          <li>Manual routing creates human error or deliberate abuse</li>
+          <li>Same lead enters system twice via duplicate form submissions</li>
+          <li>CRM integration failure re-triggers the same delivery scenario</li>
+          <li>Shared lead incorrectly marked exclusive in client contract</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Client pays premium and gets commodity — sues for fraud</li>
+          <li>Multiple clients call same consumer — consumer files TCPA complaint</li>
+          <li>Chargebacks on Stripe — account flagged for fraud</li>
+          <li>Industry word-of-mouth — other lead gen buyers warn each other</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Technical exclusivity enforcement:</strong> Route Agent checks <strong>pricing_model</strong> field before assignment. If "Exclusive" — one client only, atomic write to Airtable prevents race conditions. Lead record shows exactly which client received it and when. Red Team Agent cross-checks nightly: any lead with >1 delivery record flagged as critical finding. billing_id field makes double-billing impossible.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-high">
+    <div class="vuln-head">
+      <span class="vuln-icon">⏱️</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Lead Latency — Slow Delivery Kills Conversion</div>
+        <div class="vuln-summary">Most lead gen companies batch-deliver leads once a day via email CSV. By the time a client calls, the lead is 8–24 hours old. Studies show conversion rates drop 80% after 5 minutes and 90% after an hour. Your client blames your lead quality — but it's a delivery problem.</div>
+      </div>
+      <span class="vuln-sev">HIGH</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Manual export from CRM + email delivery once daily</li>
+          <li>No real-time webhook — client checks email at 9AM next day</li>
+          <li>Client's CRM import is manual — adds another day of delay</li>
+          <li>No notification system — client doesn't know a lead arrived</li>
+          <li>Time zones: lead arrives at 11PM, client sees it at 9AM — 10hr gap</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Consumer already hired someone else</li>
+          <li>Client's sales team calls a confused consumer</li>
+          <li>Client ROI tanks — blames lead quality not delivery speed</li>
+          <li>You're competing on quality that gets nullified by latency</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Real-time delivery by design:</strong> Make.com Deliver Agent fires within seconds of lead hitting Airtable. Client gets SMS + email instantly. Webhook pushes directly into their CRM — no manual import. Lead age is tracked to the second. onkooz's average delivery latency: <strong>under 60 seconds</strong>. This alone makes your leads 3–5x more valuable than competitors delivering by CSV.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-high">
+    <div class="vuln-head">
+      <span class="vuln-icon">🎯</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Bad Lead Abuse — Clients Gaming the Credit System</div>
+        <div class="vuln-summary">Clients learn they can claim any lead as "bad" to get credits. They contact the lead, convert them, collect revenue — then submit a refund request saying the lead was disconnected. Without proof, you eat the cost. Unchecked, this makes the business unprofitable.</div>
+      </div>
+      <span class="vuln-sev">HIGH</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>No status feedback from client CRM — you can't verify their claim</li>
+          <li>Client submits "bad lead" form with no evidence required</li>
+          <li>Auto-approval policy exploited at scale</li>
+          <li>Clients with poor sales teams blame leads to avoid accountability</li>
+          <li>No time limit on credit claims — clients dispute leads from months ago</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>High credit rate erodes margin on every client</li>
+          <li>You pay out credits on leads that were actually converted</li>
+          <li>Encourages clients to be lazy — they expect you to fix their sales</li>
+          <li>Cash flow unpredictable — credits hit randomly</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Evidence-gated credit policy:</strong> credits require submission within 72 hours of delivery. Client must submit call attempt log (time + result). Red Team Agent cross-checks: if client marked lead "bad" but their CRM shows a status update (meaning they interacted with it), flag is raised. Monthly credit rate per client tracked in Billing table — clients over 15% credit rate get a conversation before next invoice.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════ MEDIUM ════════════════ -->
+<div class="sh">Medium Severity Vulnerabilities</div>
+<div class="vuln-list">
+
+  <div class="vuln sev-med">
+    <div class="vuln-head">
+      <span class="vuln-icon">🕵️</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Competitor Intelligence — Spy Buyers</div>
+        <div class="vuln-summary">A competitor signs up as a client, buys a small batch of leads, analyzes your traffic sources, landing page structure, niche targeting, and pricing — then builds a competing operation using your blueprint.</div>
+      </div>
+      <span class="vuln-sev">MEDIUM</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Minimal client vetting — anyone can sign up and buy</li>
+          <li>Lead data reveals your targeting strategy and source quality</li>
+          <li>Your form structure and copy is reverse-engineered</li>
+          <li>Pricing tiers disclosed in sales call — competitor undercuts you</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Competitor replicates your model in 30 days</li>
+          <li>They target the same clients at lower prices</li>
+          <li>Your differentiation erodes before you scale</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Client vetting process:</strong> verify business license or Google Business Profile before onboarding. Small test batches before full access. Lead data delivered via secure link — not raw CSV that can be analyzed. Track unusual patterns: client buying leads in niches they don't operate in = Red Team flag. NDAs in client agreements.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-med">
+    <div class="vuln-head">
+      <span class="vuln-icon">📉</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">No Proof of ROI — Client Churn Without Warning</div>
+        <div class="vuln-summary">Clients cancel because they "don't see results" — but you have no data to counter their claim. You don't know their close rate, revenue per lead, or actual ROI. Without proof, every renewal is a negotiation you'll lose.</div>
+      </div>
+      <span class="vuln-sev">MEDIUM</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>No closed-loop reporting — you deliver leads and go dark</li>
+          <li>Client tracks ROI in their own spreadsheet — you never see it</li>
+          <li>Bad month of leads coincides with client's slow season</li>
+          <li>Client attributes their business growth to other channels</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Silent churn — client doesn't renew, no warning</li>
+          <li>You can't improve what you can't measure</li>
+          <li>No case studies or proof for new client acquisition</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Closed-loop client reporting:</strong> client reports include response rate, contact rate, and estimated revenue (if client shares close rate). Follow-Up Agent tracks whether leads were contacted — surfaced in report. Monthly review call template with data pulled from Airtable. Client who sees their ROI on paper every Monday doesn't cancel.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-med">
+    <div class="vuln-head">
+      <span class="vuln-icon">🌊</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Seasonal Lead Quality Drops — No Client Communication</div>
+        <div class="vuln-summary">Every niche has seasons. Roofing leads tank in winter. HVAC leads spike in summer. When quality or volume drops seasonally, clients assume you're the problem — not the market. They churn during slow periods right before the high season where you'd recover them.</div>
+      </div>
+      <span class="vuln-sev">MEDIUM</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>No proactive communication about expected seasonal patterns</li>
+          <li>Client has no context — they see lead volume drop and panic</li>
+          <li>No historical benchmarks to show "this happens every year"</li>
+          <li>Competitors will poach clients during the slow period</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Churn spikes in Q1 and Q4 for most niches</li>
+          <li>You lose clients right before your most profitable season</li>
+          <li>Constant re-acquisition cost — churn is expensive</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Seasonal forecasting in reports:</strong> Report Agent includes a "market context" section — last year's same-week volume for this niche, expected seasonal trend, and next month outlook. Niches table tracks month-by-month volume history. Client who expects the slow season doesn't cancel during it.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-med">
+    <div class="vuln-head">
+      <span class="vuln-icon">💸</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">Race to the Bottom — Commoditized Pricing</div>
+        <div class="vuln-summary">Most lead gen companies compete on price alone. A competitor offers the same niche leads for $5 less — your clients switch. Without differentiation beyond price, you're in a permanent margin war you can't win.</div>
+      </div>
+      <span class="vuln-sev">MEDIUM</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Clients treat all lead gen companies as interchangeable</li>
+          <li>No visibility into what happens to leads after delivery</li>
+          <li>No quality scoring — all leads treated as equal</li>
+          <li>Competitor undercuts price — client switches with no notice</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Margin compressed to nothing at scale</li>
+          <li>Forced to increase volume to compensate — quality drops</li>
+          <li>Business becomes unsustainable below a certain price floor</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Compete on data, not price:</strong> quality score on every lead, real-time delivery, full reporting, fraud prevention, and ROI tracking = a product competitors charging $5 less can't match. Clients pay for certainty and visibility, not just contacts. Price on value — "our $45 lead closes at 12% vs. their $30 lead at 3%" is a math clients can do.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ════════════════ LEGAL ════════════════ -->
+<div class="sh">Legal & Compliance Vulnerabilities</div>
+<div class="vuln-list">
+
+  <div class="vuln sev-legal">
+    <div class="vuln-head">
+      <span class="vuln-icon">🔒</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">GDPR / CCPA — No Data Retention or Deletion Policy</div>
+        <div class="vuln-summary">Any consumer in California (CCPA) or the EU (GDPR) can request their data be deleted. Most lead gen companies have no process — and no idea where that person's data even lives. Regulators don't accept "we didn't know" as a defense.</div>
+      </div>
+      <span class="vuln-sev">LEGAL</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Consumer data scattered across Airtable, Make.com logs, email, Stripe</li>
+          <li>No deletion workflow — manual process is impossible at scale</li>
+          <li>Data shared with clients who have their own retention issues</li>
+          <li>No privacy policy disclosing how data is used and shared</li>
+          <li>Leads archived indefinitely — no expiry policy</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>CCPA fines: <strong>$100–$750 per consumer per incident</strong></li>
+          <li>GDPR fines: up to <strong>4% of annual global revenue</strong></li>
+          <li>Class action exposure if a data breach occurs</li>
+          <li>Platform bans (Meta, Google) for non-compliant data practices</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Data lifecycle policy baked into schema:</strong> leads auto-archive after 90 days (archived flag in Airtable). Deletion request webhook: consumer emails your privacy address → Make.com scenario wipes their record from Airtable and logs the deletion in Audit Log. Privacy policy on every form page. Client contracts include data handling obligations — they're responsible for their copy of the lead data.</span>
+    </div>
+  </div>
+
+  <div class="vuln sev-legal">
+    <div class="vuln-head">
+      <span class="vuln-icon">📋</span>
+      <div class="vuln-meta">
+        <div class="vuln-title">No Client Contracts — Verbal Agreements That Fall Apart</div>
+        <div class="vuln-summary">Many small lead gen operations run on handshake deals. When a client disputes lead quality, demands refunds beyond your policy, or goes non-pay — you have nothing enforceable. They keep your leads and don't pay.</div>
+      </div>
+      <span class="vuln-sev">LEGAL</span>
+    </div>
+    <div class="vuln-body">
+      <div class="vuln-col">
+        <div class="vcol-label">How it happens</div>
+        <ul>
+          <li>Onboarding is informal — email agreement, no signature</li>
+          <li>No defined lead quality standard in writing</li>
+          <li>No payment terms — client pays "when they feel like it"</li>
+          <li>No exclusivity definition — client claims you sold their lead</li>
+          <li>No limitation of liability clause — you're exposed to unlimited claims</li>
+        </ul>
+      </div>
+      <div class="vuln-col">
+        <div class="vcol-label">Real cost</div>
+        <ul>
+          <li>Non-pay clients keep leads — you can't force payment</li>
+          <li>Credit disputes with no written policy to reference</li>
+          <li>Client claims you owe them damages for bad leads</li>
+          <li>Legal fees exceed the invoice amount to recover</li>
+        </ul>
+      </div>
+    </div>
+    <div class="vuln-solution">
+      <span class="sol-label">onkooz fix</span>
+      <span class="sol-text"><strong>Standardized client agreement covering:</strong> lead quality definition (valid contact info, submitted within X days), delivery method and timing, credit policy (72hr window, evidence required, max 15% per cycle), payment terms (net 7, auto-charge via Stripe), exclusivity definition, data use restrictions, limitation of liability. DocuSign or HelloSign — signed before first lead is sent.</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ ADVANTAGE ═══════════════════════════════ -->
+<div class="sh">How onkooz Beats All of This</div>
+<div class="advantage-grid">
+  <div class="adv">
+    <div class="adv-icon">🔍</div>
+    <div class="adv-title">Fraud-Proof Intake</div>
+    <div class="adv-desc">Multi-signal validation catches bots, lead farms, and incentivized filler before they ever hit your database. Competitors accept everything — you reject the garbage first.</div>
+  </div>
+  <div class="adv">
+    <div class="adv-icon">⚡</div>
+    <div class="adv-title">Sub-60-Second Delivery</div>
+    <div class="adv-desc">Real-time webhook delivery while competitors send CSV at 9AM. Your leads arrive when the consumer still remembers submitting the form. Conversion rates are incomparable.</div>
+  </div>
+  <div class="adv">
+    <div class="adv-icon">📊</div>
+    <div class="adv-title">Closed-Loop Reporting</div>
+    <div class="adv-desc">Weekly ROI reports to every client automatically. No other lead gen company at this price point does this. Clients who see their data don't churn.</div>
+  </div>
+  <div class="adv">
+    <div class="adv-icon">⚖️</div>
+    <div class="adv-title">TCPA Consent Records</div>
+    <div class="adv-desc">Every lead has a timestamped consent record. You can prove consent for every single call your clients make. Competitors can't — and they're one lawsuit away from nothing.</div>
+  </div>
+  <div class="adv">
+    <div class="adv-icon">🔴</div>
+    <div class="adv-title">Nightly Audit Loop</div>
+    <div class="adv-desc">Red Team Agent runs every night checking for anomalies competitors don't even know to look for. You catch problems before clients ever see them.</div>
+  </div>
+  <div class="adv">
+    <div class="adv-icon">🧠</div>
+    <div class="adv-title">AI Quality Scoring</div>
+    <div class="adv-desc">Every lead scored 1–10 before delivery. Clients know exactly what they're getting. No other competitor at this scale uses AI to qualify — they wing it.</div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
