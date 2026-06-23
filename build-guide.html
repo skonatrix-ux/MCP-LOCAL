@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onkooz — Lead System Build Guide</title>
+<style>
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:'Segoe UI',sans-serif;
+    background:#f8f8f6;
+    color:#111;
+    padding:0 0 6rem;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    background:#0a0a0a;
+    color:#fff;
+    padding:5rem 2rem 4rem;
+    text-align:center;
+  }
+  .cover-label {
+    font-size:.62rem; font-weight:700; letter-spacing:.4em; text-transform:uppercase;
+    color:#555; margin-bottom:1.5rem;
+  }
+  .cover h1 {
+    font-size:clamp(2rem,6vw,3.5rem); font-weight:900; letter-spacing:-.02em;
+    text-transform:uppercase; line-height:.95; margin-bottom:1.5rem;
+  }
+  .cover h1 span { color:#3b82f6; }
+  .cover-sub {
+    font-size:.85rem; color:#666; max-width:520px; margin:0 auto 2.5rem; line-height:1.8;
+  }
+  .cover-pills { display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap; }
+  .cover-pill {
+    font-size:.62rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase;
+    padding:6px 16px; border-radius:999px; border:1px solid rgba(255,255,255,.1);
+    color:#888;
+  }
+
+  /* ── Page ── */
+  .page { max-width:860px; margin:0 auto; padding:0 2rem; }
+
+  /* ── Phase header ── */
+  .phase {
+    margin-top:4rem;
+    padding:2rem 2.5rem;
+    border-radius:16px;
+    border-left:4px solid;
+  }
+  .phase-num {
+    font-size:.6rem; font-weight:700; letter-spacing:.3em; text-transform:uppercase;
+    margin-bottom:.5rem; opacity:.5;
+  }
+  .phase-title { font-size:1.3rem; font-weight:800; text-transform:uppercase; letter-spacing:-.01em; margin-bottom:.5rem; }
+  .phase-desc { font-size:.78rem; line-height:1.8; opacity:.65; max-width:580px; }
+
+  .phase-airtable { background:#fffbf0; border-color:#f59e0b; }
+  .phase-framer   { background:#f0f7ff; border-color:#3b82f6; }
+  .phase-make     { background:#faf0ff; border-color:#9333ea; }
+  .phase-comms    { background:#f0fff6; border-color:#16a34a; }
+  .phase-reports  { background:#f0fbff; border-color:#0891b2; }
+  .phase-billing  { background:#fff0f3; border-color:#e11d48; }
+  .phase-agents   { background:#f5f0ff; border-color:#7c3aed; }
+
+  /* ── Step card ── */
+  .steps { display:flex; flex-direction:column; gap:1px; margin-top:1.5rem; }
+  .step {
+    background:#fff;
+    border:1px solid rgba(0,0,0,.07);
+    border-radius:12px;
+    overflow:hidden;
+    margin-bottom:.75rem;
+  }
+  .step-head {
+    display:flex; align-items:flex-start; gap:1rem;
+    padding:1.25rem 1.5rem;
+    cursor:pointer;
+  }
+  .step-num {
+    width:32px; height:32px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.7rem; font-weight:800; flex-shrink:0; margin-top:1px;
+  }
+  .step-info { flex:1; }
+  .step-title { font-size:.88rem; font-weight:700; margin-bottom:.25rem; }
+  .step-summary { font-size:.7rem; color:#888; line-height:1.6; }
+  .step-time {
+    font-size:.58rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase;
+    padding:3px 10px; border-radius:999px; background:#f4f4f4; color:#999;
+    flex-shrink:0; align-self:flex-start; margin-top:4px; white-space:nowrap;
+  }
+
+  .step-body {
+    padding:0 1.5rem 1.5rem 4.5rem;
+    border-top:1px solid rgba(0,0,0,.05);
+    padding-top:1.25rem;
+  }
+
+  /* ── Action list ── */
+  .actions { display:flex; flex-direction:column; gap:.65rem; }
+  .action {
+    display:flex; gap:.85rem; align-items:flex-start;
+  }
+  .action-icon {
+    width:24px; height:24px; border-radius:6px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.75rem; flex-shrink:0; margin-top:1px;
+  }
+  .action-text { flex:1; }
+  .action-title { font-size:.75rem; font-weight:700; margin-bottom:.15rem; }
+  .action-desc { font-size:.68rem; color:#777; line-height:1.6; }
+  .action-desc code {
+    background:#f4f4f4; padding:1px 5px; border-radius:4px;
+    font-family:monospace; font-size:.65rem; color:#333;
+  }
+
+  /* ── Why box ── */
+  .why-box {
+    margin-top:1.1rem;
+    background:#f8f8f8;
+    border-radius:8px;
+    padding:.9rem 1.1rem;
+    display:flex; gap:.75rem; align-items:flex-start;
+  }
+  .why-box .why-icon { font-size:.9rem; flex-shrink:0; margin-top:1px; }
+  .why-box p { font-size:.68rem; color:#666; line-height:1.7; }
+  .why-box p strong { color:#333; }
+
+  /* ── Field table ── */
+  .field-table { width:100%; border-collapse:collapse; margin-top:.85rem; font-size:.68rem; }
+  .field-table th {
+    text-align:left; font-size:.58rem; font-weight:700; letter-spacing:.2em;
+    text-transform:uppercase; color:#bbb; padding:.5rem .75rem;
+    border-bottom:2px solid #f0f0f0;
+  }
+  .field-table td { padding:.55rem .75rem; border-bottom:1px solid #f7f7f7; vertical-align:top; line-height:1.5; }
+  .field-table tr:last-child td { border-bottom:none; }
+  .field-table .fname { font-weight:700; color:#111; font-family:monospace; font-size:.65rem; }
+  .field-table .ftype {
+    font-size:.55rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    padding:2px 7px; border-radius:4px; white-space:nowrap;
+    background:#f0f0f0; color:#888;
+  }
+  .field-table .fnote { color:#999; }
+
+  /* ── URL chip ── */
+  .url-chip {
+    display:inline-flex; align-items:center; gap:.4rem;
+    background:#0a0a0a; color:#fff; font-size:.65rem; font-weight:700;
+    letter-spacing:.08em; padding:6px 14px; border-radius:8px;
+    margin:.75rem 0 .25rem; text-decoration:none;
+  }
+
+  /* ── Warning ── */
+  .warn {
+    background:#fffbf0; border:1px solid #fbbf24; border-radius:8px;
+    padding:.85rem 1.1rem; margin-top:.85rem;
+    display:flex; gap:.6rem; align-items:flex-start;
+    font-size:.68rem; color:#92400e; line-height:1.6;
+  }
+
+  /* ── Checklist ── */
+  .checklist { display:flex; flex-direction:column; gap:.4rem; margin-top:.75rem; }
+  .check-item {
+    display:flex; gap:.7rem; align-items:flex-start;
+    font-size:.7rem; color:#555; line-height:1.5;
+  }
+  .check-box {
+    width:16px; height:16px; border:2px solid #ddd; border-radius:4px;
+    flex-shrink:0; margin-top:1px;
+  }
+
+  /* ── Connect arrow ── */
+  .connect {
+    display:flex; align-items:center; gap:.75rem;
+    margin:1.25rem 0;
+    padding:.85rem 1.1rem;
+    background:#f8f8f8; border-radius:8px;
+    font-size:.7rem; color:#555;
+  }
+  .connect strong { color:#111; }
+  .connect-arrow { color:#ccc; font-size:1rem; }
+
+  /* ── Summary strip ── */
+  .summary {
+    margin-top:4rem;
+    background:#0a0a0a;
+    color:#fff;
+    border-radius:16px;
+    padding:2.5rem;
+  }
+  .summary h2 {
+    font-size:1rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em;
+    margin-bottom:1.5rem; color:#fff;
+  }
+  .summary-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:1rem; }
+  .sum-card { background:rgba(255,255,255,.05); border-radius:10px; padding:1rem 1.1rem; }
+  .sum-card .sc-label { font-size:.58rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#555; margin-bottom:.3rem; }
+  .sum-card .sc-val { font-size:1rem; font-weight:800; }
+  .sum-card .sc-note { font-size:.6rem; color:#555; margin-top:.2rem; line-height:1.4; }
+
+  @media(max-width:600px){
+    .step-head { flex-wrap:wrap; }
+    .step-body { padding-left:1.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-label">onkooz digital — internal build guide</div>
+  <h1>Building the<br><span>Lead System</span><br>Step by Step</h1>
+  <p class="cover-sub">This document walks you and Sam through every tool, every step, and every decision needed to launch onkooz's automated lead generation and distribution business. No technical experience required.</p>
+  <div class="cover-pills">
+    <span class="cover-pill">7 phases</span>
+    <span class="cover-pill">28 steps</span>
+    <span class="cover-pill">~2 weeks to launch</span>
+    <span class="cover-pill">$0 to start</span>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ══════════════════════════════════════════════
+     PHASE 1 — AIRTABLE
+══════════════════════════════════════════════ -->
+<div class="phase phase-airtable">
+  <div class="phase-num">Phase 1 of 7</div>
+  <div class="phase-title">Set Up Airtable — Your Lead Database</div>
+  <div class="phase-desc">Airtable is where every lead lives. Think of it as your master spreadsheet that every other tool reads from and writes to. Everything else in this system plugs into Airtable. This is the foundation — get it right first.</div>
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#fef3c7;color:#d97706;">1</div>
+      <div class="step-info">
+        <div class="step-title">Create your Airtable account</div>
+        <div class="step-summary">Sign up for free. No credit card needed. The free plan gives you up to 1,000 records per base — enough to start.</div>
+      </div>
+      <span class="step-time">5 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">🌐</div>
+          <div class="action-text">
+            <div class="action-title">Go to airtable.com</div>
+            <div class="action-desc">Click "Sign up for free" — use your onkooz Google account to keep everything under one login.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">➕</div>
+          <div class="action-text">
+            <div class="action-title">Create a new Base</div>
+            <div class="action-desc">Click "Add a base" → "Start from scratch" → name it <code>onkooz-leads</code>. A base is like a folder that holds all your tables.</div>
+          </div>
+        </div>
+      </div>
+      <div class="why-box">
+        <span class="why-icon">💡</span>
+        <p><strong>Why Airtable?</strong> It's free, connects to everything, and gives you a visual dashboard to see all your leads at a glance. Unlike a regular spreadsheet, other tools can automatically add and update records here — no manual work.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#fef3c7;color:#d97706;">2</div>
+      <div class="step-info">
+        <div class="step-title">Build the Leads table — your most important table</div>
+        <div class="step-summary">Every lead that comes in gets a row here. This table tracks the lead from the moment they fill out the form until they're closed or lost.</div>
+      </div>
+      <span class="step-time">20 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">📋</div>
+          <div class="action-text">
+            <div class="action-title">Rename the default table to "Leads"</div>
+            <div class="action-desc">Double-click "Table 1" at the top and rename it to <code>Leads</code>.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">➕</div>
+          <div class="action-text">
+            <div class="action-title">Add these fields one by one</div>
+            <div class="action-desc">Click the + button at the end of the column headers to add each field below.</div>
+          </div>
+        </div>
+      </div>
+      <table class="field-table">
+        <tr><th>Field Name</th><th>Type</th><th>What it stores</th></tr>
+        <tr><td class="fname">full_name</td><td><span class="ftype">Single line text</span></td><td class="fnote">Consumer's name from the form</td></tr>
+        <tr><td class="fname">email</td><td><span class="ftype">Email</span></td><td class="fnote">Their email address</td></tr>
+        <tr><td class="fname">phone</td><td><span class="ftype">Phone number</span></td><td class="fnote">Their phone number</td></tr>
+        <tr><td class="fname">zip_code</td><td><span class="ftype">Single line text</span></td><td class="fnote">Their zip — used to match them to the right client</td></tr>
+        <tr><td class="fname">message</td><td><span class="ftype">Long text</span></td><td class="fnote">What they need (e.g. "my roof is leaking")</td></tr>
+        <tr><td class="fname">source</td><td><span class="ftype">Single select</span></td><td class="fnote">Add options: Google, Meta, Instagram, Organic</td></tr>
+        <tr><td class="fname">quality_score</td><td><span class="ftype">Number</span></td><td class="fnote">AI gives this a score 1–10 (filled automatically later)</td></tr>
+        <tr><td class="fname">status</td><td><span class="ftype">Single select</span></td><td class="fnote">Add: New, Validated, Scored, Routed, Delivered, Contacted, Closed, Lost, Rejected</td></tr>
+        <tr><td class="fname">assigned_client</td><td><span class="ftype">Single line text</span></td><td class="fnote">Which client gets this lead (will become a Link field later)</td></tr>
+        <tr><td class="fname">billing_id</td><td><span class="ftype">Single line text</span></td><td class="fnote">Unique ID to prevent double-billing (filled automatically)</td></tr>
+        <tr><td class="fname">delivered_at</td><td><span class="ftype">Date</span></td><td class="fnote">When the lead was sent to the client</td></tr>
+        <tr><td class="fname">followup_count</td><td><span class="ftype">Number</span></td><td class="fnote">How many reminders have been sent to the client</td></tr>
+        <tr><td class="fname">ip_address</td><td><span class="ftype">Single line text</span></td><td class="fnote">Consumer's IP — for fraud detection</td></tr>
+        <tr><td class="fname">consent_timestamp</td><td><span class="ftype">Date</span></td><td class="fnote">When they agreed to be contacted — your legal proof</td></tr>
+        <tr><td class="fname">archived</td><td><span class="ftype">Checkbox</span></td><td class="fnote">Checked automatically after 90 days</td></tr>
+        <tr><td class="fname">escalated</td><td><span class="ftype">Checkbox</span></td><td class="fnote">Checked if something needs your attention</td></tr>
+        <tr><td class="fname">escalation_reason</td><td><span class="ftype">Long text</span></td><td class="fnote">What went wrong — written by the Management Agent</td></tr>
+      </table>
+      <div class="why-box">
+        <span class="why-icon">💡</span>
+        <p><strong>Why so many fields?</strong> Each field is used by a different agent in the system. The <code>status</code> field is especially important — every agent updates it so you always know exactly where each lead is in the process.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#fef3c7;color:#d97706;">3</div>
+      <div class="step-info">
+        <div class="step-title">Build the Clients table</div>
+        <div class="step-summary">One row per business buying leads from you. The routing system uses this table to decide which client gets which lead.</div>
+      </div>
+      <span class="step-time">15 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">➕</div>
+          <div class="action-text">
+            <div class="action-title">Add a new table called "Clients"</div>
+            <div class="action-desc">Click the + tab at the bottom of the screen next to your Leads table → name it <code>Clients</code>.</div>
+          </div>
+        </div>
+      </div>
+      <table class="field-table">
+        <tr><th>Field Name</th><th>Type</th><th>What it stores</th></tr>
+        <tr><td class="fname">business_name</td><td><span class="ftype">Single line text</span></td><td class="fnote">Name of the business (e.g. "Miami Roofing Co")</td></tr>
+        <tr><td class="fname">contact_name</td><td><span class="ftype">Single line text</span></td><td class="fnote">The person you deal with</td></tr>
+        <tr><td class="fname">email</td><td><span class="ftype">Email</span></td><td class="fnote">Where reports and lead alerts go</td></tr>
+        <tr><td class="fname">phone</td><td><span class="ftype">Phone number</span></td><td class="fnote">Where SMS alerts go</td></tr>
+        <tr><td class="fname">niche</td><td><span class="ftype">Single select</span></td><td class="fnote">Roofing, HVAC, Legal, Dental, etc.</td></tr>
+        <tr><td class="fname">service_zips</td><td><span class="ftype">Long text</span></td><td class="fnote">Zip codes they cover, comma separated</td></tr>
+        <tr><td class="fname">crm_type</td><td><span class="ftype">Single select</span></td><td class="fnote">GoHighLevel, HubSpot, Zoho, Salesforce, Other</td></tr>
+        <tr><td class="fname">webhook_url</td><td><span class="ftype">URL</span></td><td class="fnote">Where their CRM receives the lead data</td></tr>
+        <tr><td class="fname">monthly_lead_cap</td><td><span class="ftype">Number</span></td><td class="fnote">Max leads they want per month</td></tr>
+        <tr><td class="fname">pricing_model</td><td><span class="ftype">Single select</span></td><td class="fnote">Per-lead, Shared, Exclusive</td></tr>
+        <tr><td class="fname">price_per_lead</td><td><span class="ftype">Currency</span></td><td class="fnote">What you charge them per lead</td></tr>
+        <tr><td class="fname">status</td><td><span class="ftype">Single select</span></td><td class="fnote">Active, Paused, Unresponsive, Churned</td></tr>
+        <tr><td class="fname">stripe_customer_id</td><td><span class="ftype">Single line text</span></td><td class="fnote">Their Stripe ID for auto-billing (added later)</td></tr>
+        <tr><td class="fname">response_rate</td><td><span class="ftype">Number</span></td><td class="fnote">% of leads they contact within 24hrs (auto-calculated)</td></tr>
+        <tr><td class="fname">joined_date</td><td><span class="ftype">Date</span></td><td class="fnote">When they became a client</td></tr>
+      </table>
+      <div class="warn">
+        <span>⚠️</span>
+        <span>Add your first client row manually as a test. Use a real business you plan to work with. You'll use this row to test the whole system end to end before going live.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#fef3c7;color:#d97706;">4</div>
+      <div class="step-info">
+        <div class="step-title">Create 4 more tables</div>
+        <div class="step-summary">You need 6 more tables for delivery tracking, billing, token monitoring, audit logs, and reports. These are simpler to set up.</div>
+      </div>
+      <span class="step-time">20 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">📬</div>
+          <div class="action-text">
+            <div class="action-title">Create table: "Delivery Log"</div>
+            <div class="action-desc">Fields: <code>lead_id</code> (text), <code>client_name</code> (text), <code>attempt_number</code> (number), <code>attempted_at</code> (date), <code>result</code> (select: Success/Failed/Pending), <code>error_message</code> (long text). This records every time we try to send a lead to a client's CRM.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">💳</div>
+          <div class="action-text">
+            <div class="action-title">Create table: "Billing"</div>
+            <div class="action-desc">Fields: <code>client_name</code> (text), <code>period_start</code> (date), <code>period_end</code> (date), <code>leads_delivered</code> (number), <code>credits_applied</code> (number), <code>amount_due</code> (currency), <code>status</code> (select: Draft/Sent/Paid/Overdue), <code>stripe_invoice_id</code> (text).</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">🚦</div>
+          <div class="action-text">
+            <div class="action-title">Create table: "Token Usage"</div>
+            <div class="action-desc">Fields: <code>date</code> (date), <code>claude_tokens_used</code> (number), <code>make_ops_used</code> (number), <code>airtable_record_count</code> (number), <code>model_used</code> (select: Sonnet/Haiku/Rule-based), <code>budget_status</code> (select: OK/Warning/Critical). The Token Police Agent writes here daily.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#fef3c7;">🔴</div>
+          <div class="action-text">
+            <div class="action-title">Create table: "Audit Log"</div>
+            <div class="action-desc">Fields: <code>audit_date</code> (date), <code>agent</code> (select: Red Team/Token Police/Management), <code>finding_type</code> (select: Bot Flood/Billing Discrepancy/Delivery Failure/Anomaly), <code>severity</code> (select: Low/Medium/High/Critical), <code>description</code> (long text), <code>resolved</code> (checkbox).</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PHASE 2 — FRAMER
+══════════════════════════════════════════════ -->
+<div class="phase phase-framer">
+  <div class="phase-num">Phase 2 of 7</div>
+  <div class="phase-title">Build the Lead Capture Form in Framer</div>
+  <div class="phase-desc">This is the form consumers fill out on your website. When they hit submit, the data flows directly into Airtable automatically. You already have a Framer site — we're adding a new page to it.</div>
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#dbeafe;color:#1d4ed8;">5</div>
+      <div class="step-info">
+        <div class="step-title">Create a new page in Framer for lead capture</div>
+        <div class="step-summary">This page will have one job: get the consumer's contact information and what they need. Clean, simple, no distractions.</div>
+      </div>
+      <span class="step-time">30 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#dbeafe;">📄</div>
+          <div class="action-text">
+            <div class="action-title">Open your onkooz Framer project</div>
+            <div class="action-desc">In the left panel, click the Pages icon → click + to add a new page → name it something like <code>get-quotes</code> or <code>free-estimate</code>.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#dbeafe;">📝</div>
+          <div class="action-text">
+            <div class="action-title">Add a Form component</div>
+            <div class="action-desc">In Framer, press <code>Cmd+K</code> → search "Form" → drag a form onto the page. Add fields for: Name, Email, Phone, Zip Code, and a text area for "What do you need?"</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#dbeafe;">⚖️</div>
+          <div class="action-text">
+            <div class="action-title">Add the TCPA consent checkbox — REQUIRED</div>
+            <div class="action-desc">This is your legal protection. Add a checkbox (not pre-checked) with this text: <em>"By submitting this form I agree to be contacted by onkooz partner businesses by phone, text, and email regarding my request. I agree to the Privacy Policy and Terms."</em></div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#dbeafe;">🔗</div>
+          <div class="action-text">
+            <div class="action-title">Connect the form to Airtable</div>
+            <div class="action-desc">In Framer's form settings, look for "Submit Action" → select "Send to Webhook" → paste your Airtable webhook URL (you'll get this in Phase 3 from Make.com). For now, you can use a free tool called <code>formspree.io</code> as a temporary bridge.</div>
+          </div>
+        </div>
+      </div>
+      <div class="why-box">
+        <span class="why-icon">💡</span>
+        <p><strong>Keep it simple:</strong> The fewer fields on the form, the higher the conversion rate. Name, phone, email, zip, and what they need is all you need. Every extra field you add drops submissions by ~10%.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#dbeafe;color:#1d4ed8;">6</div>
+      <div class="step-info">
+        <div class="step-title">Add a Thank You page</div>
+        <div class="step-summary">After submitting, consumers need to see a confirmation. This also builds trust and reduces bounce from people who wonder if the form worked.</div>
+      </div>
+      <span class="step-time">10 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#dbeafe;">✅</div>
+          <div class="action-text">
+            <div class="action-title">Create a /thank-you page</div>
+            <div class="action-desc">Simple message: "Thanks! A local [niche] specialist will contact you within 24 hours." Add your onkooz logo and a phone number in case they want to call directly. Redirect the form to this page on successful submission.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PHASE 3 — MAKE.COM
+══════════════════════════════════════════════ -->
+<div class="phase phase-make">
+  <div class="phase-num">Phase 3 of 7</div>
+  <div class="phase-title">Set Up Make.com — The Automation Engine</div>
+  <div class="phase-desc">Make.com is the brain that connects everything. When a form is submitted, Make.com receives it, validates it, scores it, routes it to the right client, and pushes it to their CRM. All automatically, 24/7, without you touching anything.</div>
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#f3e8ff;color:#7e22ce;">7</div>
+      <div class="step-info">
+        <div class="step-title">Create your Make.com account</div>
+        <div class="step-summary">Make.com's free plan gives you 1,000 operations per month. One lead going through the full system uses about 12–15 operations — so you can process roughly 65 leads for free before needing to upgrade to $9/mo.</div>
+      </div>
+      <span class="step-time">5 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">🌐</div>
+          <div class="action-text">
+            <div class="action-title">Go to make.com</div>
+            <div class="action-desc">Sign up free. Use your onkooz email. No credit card needed for the free plan.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">🔗</div>
+          <div class="action-text">
+            <div class="action-title">Connect Make.com to Airtable</div>
+            <div class="action-desc">In Make.com, go to Connections → search "Airtable" → click Connect → it will ask you to log into Airtable and grant access. Select your <code>onkooz-leads</code> base.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#f3e8ff;color:#7e22ce;">8</div>
+      <div class="step-info">
+        <div class="step-title">Build Scenario 1 — Intake Agent</div>
+        <div class="step-summary">This is the first scenario that runs every time a form is submitted. It validates the lead and saves it to Airtable if it passes. It rejects junk before it ever enters your database.</div>
+      </div>
+      <span class="step-time">30 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">➕</div>
+          <div class="action-text">
+            <div class="action-title">Create a new Scenario</div>
+            <div class="action-desc">Click "Create a new scenario" → click the + circle → search for "Webhooks" → select "Custom webhook". Copy the webhook URL it gives you — this is what you paste into your Framer form's submit action.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">🔍</div>
+          <div class="action-text">
+            <div class="action-title">Add a Filter for duplicate detection</div>
+            <div class="action-desc">After the webhook trigger, add a "Filter" module. Set the condition: search Airtable Leads table for the same phone number submitted in the last 30 days. If found → stop the scenario (don't save the duplicate).</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">📝</div>
+          <div class="action-text">
+            <div class="action-title">Add "Create Record" in Airtable</div>
+            <div class="action-desc">Add an Airtable module → "Create a Record" → select your Leads table → map each form field to the matching Airtable field. Set status to <code>New</code>, set consent_timestamp to the current time.</div>
+          </div>
+        </div>
+      </div>
+      <div class="connect">
+        <strong>Form Submit</strong>
+        <span class="connect-arrow">→</span>
+        <strong>Make.com Webhook</strong>
+        <span class="connect-arrow">→</span>
+        <strong>Duplicate Check</strong>
+        <span class="connect-arrow">→</span>
+        <strong>Save to Airtable</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#f3e8ff;color:#7e22ce;">9</div>
+      <div class="step-info">
+        <div class="step-title">Build Scenario 2 — Qualify + Route Agent</div>
+        <div class="step-summary">This runs automatically when a new lead appears in Airtable. It sends the lead's message to Claude AI for scoring, then matches the lead to the right client based on niche and zip code.</div>
+      </div>
+      <span class="step-time">45 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">👁️</div>
+          <div class="action-text">
+            <div class="action-title">Trigger: Watch Airtable for new leads</div>
+            <div class="action-desc">Start a new scenario → add Airtable module → "Watch Records" → select Leads table → filter: status = <code>New</code>. Make.com will check every 15 minutes for new leads.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">🧠</div>
+          <div class="action-text">
+            <div class="action-title">Add Claude AI scoring via HTTP module</div>
+            <div class="action-desc">Add an "HTTP" module → "Make a request" → URL: <code>https://api.anthropic.com/v1/messages</code>. In the body, send the lead's message field and ask Claude to score it 1–10. You'll need your Claude API key from console.anthropic.com.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">🗺️</div>
+          <div class="action-text">
+            <div class="action-title">Search Clients table for a match</div>
+            <div class="action-desc">Add Airtable module → "Search Records" → Clients table → filter by niche matching the lead's niche AND service_zips containing the lead's zip. This finds which client should get this lead.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">✏️</div>
+          <div class="action-text">
+            <div class="action-title">Update the lead record with score + client</div>
+            <div class="action-desc">Add Airtable → "Update Record" → on the Leads record, set: <code>quality_score</code> = the AI score, <code>assigned_client</code> = the matching client's name, <code>status</code> = <code>Routed</code>.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#f3e8ff;color:#7e22ce;">10</div>
+      <div class="step-info">
+        <div class="step-title">Build Scenario 3 — Delivery Agent</div>
+        <div class="step-summary">This fires when a lead is marked "Routed." It sends the lead data to the client's CRM via webhook and alerts the client by SMS and email instantly.</div>
+      </div>
+      <span class="step-time">30 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">👁️</div>
+          <div class="action-text">
+            <div class="action-title">Trigger: Watch for status = Routed</div>
+            <div class="action-desc">New scenario → Airtable "Watch Records" → Leads table → filter: status = <code>Routed</code>.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">📤</div>
+          <div class="action-text">
+            <div class="action-title">POST to the client's CRM webhook</div>
+            <div class="action-desc">HTTP module → POST request → URL = the client's <code>webhook_url</code> from Airtable (pulled from the Clients table lookup). Body: lead's name, phone, email, zip, message, score, and timestamp. This creates a contact in their CRM automatically.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">📱</div>
+          <div class="action-text">
+            <div class="action-title">Send client an SMS alert</div>
+            <div class="action-desc">Add Twilio module → "Send an SMS" → To: client's phone from Airtable → Message: "New lead from onkooz: [Name] in [Zip] needs [Niche]. Call [Phone] now. Score: [Score]/10."</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#f3e8ff;">📧</div>
+          <div class="action-text">
+            <div class="action-title">Send client an email with full lead details</div>
+            <div class="action-desc">Add Resend or Gmail module → To: client's email → Subject: "New Lead — [Name], [Zip]" → Body: all lead fields. Update lead status to <code>Delivered</code> and set <code>delivered_at</code> to now.</div>
+          </div>
+        </div>
+      </div>
+      <div class="warn">
+        <span>⚠️</span>
+        <span><strong>Retry logic:</strong> In Make.com, in the scenario settings, enable "Auto-retry on error" — set to 3 retries with delays. If all 3 fail, the lead status updates to "Delivery Failed" and you get an alert.</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PHASE 4 — COMMS
+══════════════════════════════════════════════ -->
+<div class="phase phase-comms">
+  <div class="phase-num">Phase 4 of 7</div>
+  <div class="phase-title">Set Up SMS + Email — Twilio & Resend</div>
+  <div class="phase-desc">Two tools handle all communication. Twilio sends SMS text alerts to clients the moment a lead arrives. Resend sends all emails — lead details, reports, invoices. Both connect directly into Make.com.</div>
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#dcfce7;color:#15803d;">11</div>
+      <div class="step-info">
+        <div class="step-title">Set up Twilio for SMS</div>
+        <div class="step-summary">Twilio gives you a real phone number that Make.com uses to text clients. Costs about $0.007 per SMS — essentially free at your starting volume.</div>
+      </div>
+      <span class="step-time">15 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#dcfce7;">🌐</div>
+          <div class="action-text">
+            <div class="action-title">Go to twilio.com → sign up free</div>
+            <div class="action-desc">The free trial gives you $15 credit — enough for ~2,000 SMS messages. Go to Console → Phone Numbers → Get a number. Pick any US number.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#dcfce7;">🔑</div>
+          <div class="action-text">
+            <div class="action-title">Copy your Account SID and Auth Token</div>
+            <div class="action-desc">In Twilio Console → Dashboard → copy your <code>Account SID</code> and <code>Auth Token</code>. In Make.com, when you add a Twilio module, paste these in to connect the accounts.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#dcfce7;color:#15803d;">12</div>
+      <div class="step-info">
+        <div class="step-title">Set up Resend for email</div>
+        <div class="step-summary">Resend is a modern email tool. Free plan sends 3,000 emails/month. You'll use it for lead delivery emails, weekly reports, and invoice notifications.</div>
+      </div>
+      <span class="step-time">15 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#dcfce7;">🌐</div>
+          <div class="action-text">
+            <div class="action-title">Go to resend.com → sign up free</div>
+            <div class="action-desc">Connect your domain (e.g. onkooz.com) so emails come from <code>leads@onkooz.com</code> — not a generic address. Follow their DNS setup guide — takes about 10 minutes.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#dcfce7;">🔑</div>
+          <div class="action-text">
+            <div class="action-title">Copy your Resend API key</div>
+            <div class="action-desc">In Resend → API Keys → Create API Key → copy it. In Make.com, add an HTTP module to call Resend's API and paste your key in the authorization header.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PHASE 5 — FOLLOW-UP + REPORTS
+══════════════════════════════════════════════ -->
+<div class="phase phase-reports">
+  <div class="phase-num">Phase 5 of 7</div>
+  <div class="phase-title">Build Follow-Up + Reporting Scenarios</div>
+  <div class="phase-desc">These two scenarios run on a schedule — not triggered by events. The Follow-Up Agent checks every few hours for unresponded leads. The Report Agent runs every Monday morning and emails everyone their report automatically.</div>
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#e0f2fe;color:#0369a1;">13</div>
+      <div class="step-info">
+        <div class="step-title">Build the Follow-Up Agent scenario</div>
+        <div class="step-summary">This runs every 4 hours. It finds leads delivered more than 4 hours ago with no client response and sends a reminder. Maximum 2 reminders — then it re-routes the lead.</div>
+      </div>
+      <span class="step-time">25 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#e0f2fe;">⏰</div>
+          <div class="action-text">
+            <div class="action-title">Trigger: Schedule — every 4 hours</div>
+            <div class="action-desc">New scenario → click the trigger → "Scheduling" → set to run every 4 hours.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#e0f2fe;">🔍</div>
+          <div class="action-text">
+            <div class="action-title">Search for leads needing follow-up</div>
+            <div class="action-desc">Airtable → "Search Records" → Leads table → filter: status = <code>Delivered</code> AND delivered_at is more than 4 hours ago AND followup_count is less than 2.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#e0f2fe;">📱</div>
+          <div class="action-text">
+            <div class="action-title">Send reminder to client + update count</div>
+            <div class="action-desc">Twilio SMS to client: "Reminder: You have an uncalled lead from [Name] — [Phone]. Please contact them ASAP." Then update the lead's <code>followup_count</code> + 1 in Airtable.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#e0f2fe;color:#0369a1;">14</div>
+      <div class="step-info">
+        <div class="step-title">Build the Report Agent scenario</div>
+        <div class="step-summary">Runs every Monday at 8AM automatically. Pulls last week's data, builds two reports — one for you (all clients), one for each client (their leads only) — and emails them out. Zero manual work.</div>
+      </div>
+      <span class="step-time">40 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#e0f2fe;">📅</div>
+          <div class="action-text">
+            <div class="action-title">Trigger: Schedule — every Monday at 8AM</div>
+            <div class="action-desc">New scenario → Scheduling trigger → set day: Monday, time: 8:00 AM.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#e0f2fe;">📊</div>
+          <div class="action-text">
+            <div class="action-title">Pull last 7 days of leads per client</div>
+            <div class="action-desc">Airtable → "Search Records" → Leads table → filter: created_at in last 7 days. Group by assigned_client. For each client, count total leads, delivered, contacted, closed, and average quality score.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#e0f2fe;">📧</div>
+          <div class="action-text">
+            <div class="action-title">Email each client their report</div>
+            <div class="action-desc">Loop through each client → Resend email to their address. Subject: "Your onkooz Lead Report — Week of [Date]". Body includes: leads received, average score, how many were contacted, and a link to their Airtable shared view for full details.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#e0f2fe;">📧</div>
+          <div class="action-text">
+            <div class="action-title">Email yourself the internal report</div>
+            <div class="action-desc">Send a second email to your onkooz address with ALL clients in one report: total leads generated, total revenue, any clients with high credit rates, any delivery failures from the week, and Make.com op usage vs. limit.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PHASE 6 — BILLING
+══════════════════════════════════════════════ -->
+<div class="phase phase-billing">
+  <div class="phase-num">Phase 6 of 7</div>
+  <div class="phase-title">Set Up Stripe Billing</div>
+  <div class="phase-desc">Stripe handles all client payments. The Billing Agent counts how many leads each client received, generates an invoice, and either auto-charges their card or emails them an invoice link — automatically, at the end of each billing cycle.</div>
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#ffe4e6;color:#be123c;">15</div>
+      <div class="step-info">
+        <div class="step-title">Set up your Stripe account</div>
+        <div class="step-summary">Stripe is free to use — they take 2.9% + $0.30 per transaction. No monthly fee. You only pay when you collect money.</div>
+      </div>
+      <span class="step-time">20 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#ffe4e6;">🌐</div>
+          <div class="action-text">
+            <div class="action-title">Go to stripe.com → create account</div>
+            <div class="action-desc">Sign up with your onkooz email. Complete business verification (takes 1–2 days to fully activate). Add your bank account for payouts.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ffe4e6;">👤</div>
+          <div class="action-text">
+            <div class="action-title">Create a Customer in Stripe for each client</div>
+            <div class="action-desc">In Stripe → Customers → + New → add each client's business name, email, and card on file. Copy their <code>Customer ID</code> (starts with <code>cus_</code>) and paste it into the <code>stripe_customer_id</code> field in your Airtable Clients table.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ffe4e6;">🔑</div>
+          <div class="action-text">
+            <div class="action-title">Connect Stripe to Make.com</div>
+            <div class="action-desc">In Make.com → Connections → search "Stripe" → paste your Stripe Secret Key (from Stripe Dashboard → Developers → API Keys). Now Make.com can create and send invoices automatically.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#ffe4e6;color:#be123c;">16</div>
+      <div class="step-info">
+        <div class="step-title">Build the Billing Agent scenario</div>
+        <div class="step-summary">Runs on the 1st of every month. Counts each client's delivered leads, subtracts any approved credits, calculates the amount owed, and sends the invoice through Stripe.</div>
+      </div>
+      <span class="step-time">30 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#ffe4e6;">📅</div>
+          <div class="action-text">
+            <div class="action-title">Trigger: 1st of every month at 9AM</div>
+            <div class="action-desc">Scheduling trigger → Monthly → Day 1 → 9:00 AM.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ffe4e6;">🔢</div>
+          <div class="action-text">
+            <div class="action-title">Count delivered leads per client</div>
+            <div class="action-desc">Airtable → Search leads where status = <code>Delivered</code> AND assigned_client = [client] AND delivered_at is in the previous month. Count them. Check Billing table for any approved credits for this client this month. Subtract credits from total.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ffe4e6;">💳</div>
+          <div class="action-text">
+            <div class="action-title">Create and send invoice via Stripe</div>
+            <div class="action-desc">Stripe module → "Create Invoice Item" → customer = client's stripe_customer_id → amount = net_leads × price_per_lead. Then "Finalize and Send Invoice." Stripe emails the invoice link to the client automatically.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ffe4e6;">📝</div>
+          <div class="action-text">
+            <div class="action-title">Log invoice in Airtable Billing table</div>
+            <div class="action-desc">Create a new record in the Billing table with all the invoice details and the Stripe invoice ID. This gives you a permanent record and lets the Red Team Agent verify billing accuracy.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PHASE 7 — AGENTS
+══════════════════════════════════════════════ -->
+<div class="phase phase-agents">
+  <div class="phase-num">Phase 7 of 7</div>
+  <div class="phase-title">Add the Management, Token Police + Red Team Agents</div>
+  <div class="phase-desc">These three agents are your safety net. They don't generate leads or send invoices — they watch everything else and catch problems before they cost you money or clients.</div>
+</div>
+
+<div class="steps">
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#ede9fe;color:#6d28d9;">17</div>
+      <div class="step-info">
+        <div class="step-title">Build the Token Police Agent</div>
+        <div class="step-summary">Runs every morning. Checks how much you've spent on Claude API and Make.com operations. Alerts you before you hit limits. Switches to cheaper AI mode if needed.</div>
+      </div>
+      <span class="step-time">20 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#ede9fe;">📅</div>
+          <div class="action-text">
+            <div class="action-title">Trigger: Every day at 7AM</div>
+            <div class="action-desc">Runs before the business day starts so you know your budget status each morning.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ede9fe;">🔢</div>
+          <div class="action-text">
+            <div class="action-title">Pull yesterday's token usage from Airtable</div>
+            <div class="action-desc">Search Token Usage table for today's date. Compare <code>claude_cost_usd</code> against your $2/day limit and <code>make_ops_used</code> against your monthly limit.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ede9fe;">📱</div>
+          <div class="action-text">
+            <div class="action-title">Alert you if approaching limits</div>
+            <div class="action-desc">If daily AI cost > $1.50 → SMS yourself: "⚠️ AI budget at 75% today — switching to Haiku model." If Make.com ops > 700 this month → SMS: "⚠️ 700/1000 Make.com ops used — consider upgrading."</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num" style="background:#ede9fe;color:#6d28d9;">18</div>
+      <div class="step-info">
+        <div class="step-title">Build the Red Team Agent</div>
+        <div class="step-summary">Runs every night at midnight. Audits the past 24 hours of activity looking for fraud, billing discrepancies, and delivery failures. Sends you a green or red status report each morning.</div>
+      </div>
+      <span class="step-time">30 min</span>
+    </div>
+    <div class="step-body">
+      <div class="actions">
+        <div class="action">
+          <div class="action-icon" style="background:#ede9fe;">🕛</div>
+          <div class="action-text">
+            <div class="action-title">Trigger: Every night at midnight</div>
+            <div class="action-desc">Scheduling → Daily → 12:00 AM.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ede9fe;">🔍</div>
+          <div class="action-text">
+            <div class="action-title">Check 1: IP flood detection</div>
+            <div class="action-desc">Search Leads where created_at = today. Group by ip_address. If any IP has more than 3 leads today → flag those leads as quarantined, write to Audit Log, alert yourself.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ede9fe;">🔍</div>
+          <div class="action-text">
+            <div class="action-title">Check 2: Delivery vs. billing cross-check</div>
+            <div class="action-desc">Count leads with status = <code>Delivered</code> this month per client. Compare to what's in the Billing table for this month. If numbers don't match → write to Audit Log with severity = High.</div>
+          </div>
+        </div>
+        <div class="action">
+          <div class="action-icon" style="background:#ede9fe;">📧</div>
+          <div class="action-text">
+            <div class="action-title">Email yourself the nightly audit report</div>
+            <div class="action-desc">If no issues found → email: "✅ Audit clean — 0 anomalies detected." If issues found → email a list of each finding with severity. You wake up knowing your system's health.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SUMMARY
+══════════════════════════════════════════════ -->
+<div class="summary">
+  <h2>What you've built — summary</h2>
+  <div class="summary-grid">
+    <div class="sum-card">
+      <div class="sc-label">Lead Capture</div>
+      <div class="sc-val" style="color:#4ade80;">Framer</div>
+      <div class="sc-note">Landing page + TCPA-compliant form on your onkooz site</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">Lead Database</div>
+      <div class="sc-val" style="color:#fbbf24;">Airtable</div>
+      <div class="sc-note">8 tables, every lead and client tracked in one place</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">Automation</div>
+      <div class="sc-val" style="color:#c084fc;">Make.com</div>
+      <div class="sc-note">10 agent scenarios — intake, qualify, route, deliver, follow-up, report, billing, audit</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">AI Scoring</div>
+      <div class="sc-val" style="color:#60a5fa;">Claude API</div>
+      <div class="sc-note">Every lead scored 1–10 before it leaves your system</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">Client Alerts</div>
+      <div class="sc-val" style="color:#4ade80;">Twilio + Resend</div>
+      <div class="sc-note">Instant SMS + email when a lead arrives</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">Billing</div>
+      <div class="sc-val" style="color:#fb7185;">Stripe</div>
+      <div class="sc-note">Auto-invoicing on the 1st of each month</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">Monthly Cost</div>
+      <div class="sc-val" style="color:#4ade80;">$0–$30</div>
+      <div class="sc-note">All tools free to start. Scale costs grow with revenue</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">Time to Launch</div>
+      <div class="sc-val" style="color:#fbbf24;">~2 weeks</div>
+      <div class="sc-note">Working part-time alongside other projects</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHECKLIST -->
+<div style="margin-top:3rem;">
+  <div style="font-size:.62rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;color:#999;margin-bottom:1rem;">Pre-Launch Checklist</div>
+  <div class="checklist">
+    <div class="check-item"><div class="check-box"></div>Airtable base created with all 6 tables and fields</div>
+    <div class="check-item"><div class="check-box"></div>At least 1 client added to Clients table as a test</div>
+    <div class="check-item"><div class="check-box"></div>Lead capture page live on Framer with TCPA checkbox</div>
+    <div class="check-item"><div class="check-box"></div>Make.com connected to Airtable, Twilio, Resend, Stripe</div>
+    <div class="check-item"><div class="check-box"></div>All 7 Make.com scenarios built and tested</div>
+    <div class="check-item"><div class="check-box"></div>Test lead submitted — confirmed it arrived in Airtable</div>
+    <div class="check-item"><div class="check-box"></div>Test lead delivered to client's CRM successfully</div>
+    <div class="check-item"><div class="check-box"></div>SMS and email alerts received by test client</div>
+    <div class="check-item"><div class="check-box"></div>Monday report received in your inbox</div>
+    <div class="check-item"><div class="check-box"></div>Test invoice generated in Stripe</div>
+    <div class="check-item"><div class="check-box"></div>Nightly audit report arriving clean</div>
+    <div class="check-item"><div class="check-box"></div>Client contract signed before going live</div>
+  </div>
+</div>
+
+</div><!-- end page -->
+</body>
+</html>
