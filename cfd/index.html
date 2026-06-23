@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CFD Wind Tunnel — WebGL2 LBM</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>CFD WIND TUNNEL</h1>
+  <span class="badge">D2Q9 LBM</span>
+  <span class="badge">WebGL2</span>
+  <span class="badge live">LIVE</span>
+  <div id="stats">
+    FPS <span id="fps">—</span> &nbsp;|&nbsp;
+    Step <span id="step">0</span> &nbsp;|&nbsp;
+    Re <span id="re">—</span>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ── Sidebar ──────────────────────────────── -->
+  <aside class="sidebar">
+
+    <!-- Drawing tools -->
+    <div class="section">
+      <div class="section-title">Draw Obstacle</div>
+      <div class="tool-grid">
+        <button class="tool-btn active" data-tool="freehand">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 12 Q5 4 12 2" stroke="#7aa2f7" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
+          Freehand
+        </button>
+        <button class="tool-btn" data-tool="erase">
+          <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="5" width="10" height="6" rx="1" stroke="#f7768e" stroke-width="1.5" fill="none"/><line x1="7" y1="5" x2="7" y2="11" stroke="#f7768e" stroke-width="1"/></svg>
+          Eraser
+        </button>
+        <button class="tool-btn" data-tool="line">
+          <svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="12" x2="12" y2="2" stroke="#7aa2f7" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Line
+        </button>
+        <button class="tool-btn" data-tool="rect">
+          <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="8" rx="1" stroke="#7aa2f7" stroke-width="1.5" fill="none"/></svg>
+          Rectangle
+        </button>
+        <button class="tool-btn" data-tool="ellipse">
+          <svg width="14" height="14" viewBox="0 0 14 14"><ellipse cx="7" cy="7" rx="5" ry="3.5" stroke="#7aa2f7" stroke-width="1.5" fill="none"/></svg>
+          Ellipse
+        </button>
+        <button class="tool-btn" data-tool="bezier">
+          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 12 C4 2 10 2 12 12" stroke="#7aa2f7" stroke-width="1.5" fill="none"/><circle cx="2" cy="12" r="1.5" fill="#f7768e"/><circle cx="12" cy="12" r="1.5" fill="#7aa2f7"/></svg>
+          Bézier
+        </button>
+      </div>
+
+      <!-- Bezier controls (shown always, relevant when bezier active) -->
+      <div style="display:flex;gap:4px;margin-top:6px;">
+        <button class="action-btn primary" id="btn-bez-commit" style="margin:0;flex:1">✓ Commit</button>
+        <button class="action-btn" id="btn-bez-clear" style="margin:0;flex:1">✕ Clear</button>
+      </div>
+    </div>
+
+    <!-- Brush settings -->
+    <div class="section">
+      <div class="section-title">Brush</div>
+      <div class="param-row">
+        <div class="param-label">Radius <span id="val-brush">4</span>px</div>
+        <input type="range" id="sl-brush" min="1" max="20" value="4">
+      </div>
+      <div class="param-row">
+        <div class="param-label">Smoothing <span id="val-smooth">0.5</span></div>
+        <input type="range" id="sl-smooth" min="0" max="1" step="0.05" value="0.5">
+      </div>
+    </div>
+
+    <!-- Flow parameters -->
+    <div class="section">
+      <div class="section-title">Flow</div>
+      <div class="param-row">
+        <div class="param-label">Relaxation ω <span id="val-omega">1.70</span></div>
+        <input type="range" id="sl-omega" min="0.6" max="1.98" step="0.01" value="1.7">
+      </div>
+      <div class="param-row">
+        <div class="param-label">Inlet speed <span id="val-u0">0.080</span></div>
+        <input type="range" id="sl-u0" min="0.01" max="0.18" step="0.002" value="0.08">
+      </div>
+      <div class="param-row">
+        <div class="param-label">Angle <span id="val-angle">0°</span></div>
+        <input type="range" id="sl-angle" min="-25" max="25" step="1" value="0">
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="section">
+      <div class="section-title">Visualization</div>
+      <div class="viz-grid">
+        <button class="viz-btn active" data-viz="0">
+          <span class="dot" style="background:linear-gradient(90deg,#050384,#c03d74,#f0f421)"></span> Speed |u|
+        </button>
+        <button class="viz-btn" data-viz="1">
+          <span class="dot" style="background:linear-gradient(90deg,#042db6,#ccc,#c21904)"></span> Pressure ρ
+        </button>
+        <button class="viz-btn" data-viz="2">
+          <span class="dot" style="background:linear-gradient(90deg,#042db6,#ccc,#c21904)"></span> Vorticity ω
+        </button>
+        <button class="viz-btn" data-viz="3">
+          <span class="dot" style="background:linear-gradient(90deg,#270c52,#1e8f82,#faed24)"></span> Ux stream
+        </button>
+      </div>
+      <div class="param-row" style="margin-top:8px">
+        <div class="param-label">Scale <span id="val-scale">0.15</span></div>
+        <input type="range" id="sl-scale" min="0.02" max="0.5" step="0.01" value="0.15">
+      </div>
+    </div>
+
+    <!-- Streamlines -->
+    <div class="section">
+      <div class="section-title">Streamlines</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:10px;color:#9aa5ce">
+        <input type="checkbox" id="chk-streamlines" checked>
+        <label for="chk-streamlines">Show particles</label>
+      </div>
+      <div class="param-row">
+        <div class="param-label">Count</div>
+        <input type="range" id="sl-particles" min="50" max="800" step="50" value="300">
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="section">
+      <div class="section-title">Actions</div>
+      <button class="action-btn" id="btn-preset-car">🚗 Load Car Preset</button>
+      <button class="action-btn" id="btn-reset">↺ Reset Flow</button>
+      <button class="action-btn danger" id="btn-clear-obs">✕ Clear Obstacles</button>
+      <button class="action-btn" id="btn-pause">⏸ Pause</button>
+      <button class="action-btn" id="btn-export">⬇ Export PNG</button>
+    </div>
+
+  </aside>
+
+  <!-- ── Canvas Area ──────────────────────────── -->
+  <div class="canvas-wrap drawing">
+    <!-- Layered canvases (bottom to top) -->
+    <canvas id="sim-canvas"></canvas>
+    <canvas id="stream-canvas" style="pointer-events:none"></canvas>
+    <canvas id="handle-canvas" style="pointer-events:none"></canvas>
+    <canvas id="draw-canvas" style="cursor:crosshair"></canvas>
+
+    <!-- Tunnel labels -->
+    <div class="tunnel-label" id="label-inlet">↠ inlet</div>
+    <div class="tunnel-label" id="label-outlet">outlet ↠</div>
+
+    <!-- Color legend -->
+    <div id="legend">
+      <div id="legend-mode" style="font-size:9px;color:#9aa5ce;margin-bottom:2px">Speed</div>
+      <div id="legend-bar" style="width:100px;height:8px;border-radius:2px"></div>
+      <div id="legend-labels">
+        <span id="legend-min">0</span>
+        <span id="legend-max">u_max</span>
+      </div>
+    </div>
+
+    <!-- Angle indicator -->
+    <div id="angle-indicator">
+      <canvas id="angle-canvas" width="60" height="60"></canvas>
+    </div>
+
+    <div id="tooltip"></div>
+  </div>
+
+</div>
+
+<script type="module" src="main.js"></script>
+</body>
+</html>
