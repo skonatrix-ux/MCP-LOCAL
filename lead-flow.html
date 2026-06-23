@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onkooz — Lead Flow System</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    min-height: 100vh;
+    padding: 3rem 2rem;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: clamp(1.4rem, 3vw, 2rem);
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: #fff;
+    margin-bottom: 0.5rem;
+  }
+  .subtitle {
+    text-align: center;
+    font-size: 0.75rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 4rem;
+  }
+
+  /* ── Flow container ── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── Phase label ── */
+  .phase-label {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.35em;
+    text-transform: uppercase;
+    color: #444;
+    align-self: flex-start;
+    margin-left: calc(50% - 180px);
+    margin-bottom: 0.5rem;
+    margin-top: 2rem;
+  }
+
+  /* ── Node ── */
+  .node {
+    width: 360px;
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    position: relative;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .node-icon {
+    font-size: 1.4rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  .node-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 0.35rem;
+  }
+  .node-desc {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.45);
+    line-height: 1.6;
+  }
+
+  /* colour themes */
+  .node-consumer  { background: #111; border-color: rgba(255,255,255,0.1); }
+  .node-ad        { background: #111826; border-color: #1d4ed8; }
+  .node-form      { background: #0f1a11; border-color: #16a34a; }
+  .node-airtable  { background: #1a1000; border-color: #d97706; }
+  .node-make      { background: #1a0a1a; border-color: #9333ea; }
+  .node-client    { background: #0f1a1a; border-color: #0891b2; }
+  .node-notify    { background: #1a1000; border-color: #d97706; }
+  .node-you       { background: #1a0a0a; border-color: #e11d48; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.55rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 0.6rem;
+  }
+  .tag-blue   { background: rgba(29,78,216,0.2);  color: #60a5fa; }
+  .tag-green  { background: rgba(22,163,74,0.2);  color: #4ade80; }
+  .tag-amber  { background: rgba(217,119,6,0.2);  color: #fbbf24; }
+  .tag-purple { background: rgba(147,51,234,0.2); color: #c084fc; }
+  .tag-cyan   { background: rgba(8,145,178,0.2);  color: #22d3ee; }
+  .tag-red    { background: rgba(225,29,72,0.2);  color: #fb7185; }
+  .tag-gray   { background: rgba(255,255,255,0.07); color: #888; }
+
+  /* ── Arrow ── */
+  .arrow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 0;
+  }
+  .arrow-line {
+    width: 2px;
+    height: 40px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+  }
+  .arrow-head {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid rgba(255,255,255,0.15);
+  }
+  .arrow-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #444;
+    margin-top: 0.25rem;
+  }
+
+  /* ── Split (fork) ── */
+  .fork-container {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+    position: relative;
+    width: 100%;
+    justify-content: center;
+  }
+  .fork-branch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+  .fork-bar {
+    width: 100%;
+    max-width: 500px;
+    height: 2px;
+    background: rgba(255,255,255,0.07);
+    position: relative;
+    margin: 0 auto;
+  }
+
+  /* ── Visibility badge ── */
+  .visibility-bar {
+    width: 360px;
+    background: rgba(225,29,72,0.08);
+    border: 1px solid rgba(225,29,72,0.2);
+    border-radius: 8px;
+    padding: 0.9rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .visibility-bar .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e11d48;
+    flex-shrink: 0;
+    animation: pulse 1.5s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+  .visibility-bar p {
+    font-size: 0.68rem;
+    color: #fb7185;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    max-width: 860px;
+    margin: 4rem auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    padding-top: 2.5rem;
+  }
+  .legend-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+  }
+  .legend-text strong {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.2rem;
+  }
+  .legend-text span {
+    font-size: 0.65rem;
+    color: #555;
+    line-height: 1.5;
+  }
+
+  /* ── Tool stack ── */
+  .tool-stack {
+    max-width: 860px;
+    margin: 2.5rem auto 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+  }
+  .tool-card {
+    background: #111;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+  }
+  .tool-card .tool-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+  .tool-card .tool-role {
+    font-size: 0.65rem;
+    color: #555;
+    line-height: 1.5;
+  }
+  .tool-card .tool-cost {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    margin-top: 0.5rem;
+  }
+  .free { color: #4ade80; }
+  .paid { color: #fbbf24; }
+
+  footer {
+    text-align: center;
+    margin-top: 3rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: #333;
+  }
+</style>
+</head>
+<body>
+
+<h1>onkooz — Lead Flow System</h1>
+<p class="subtitle">From ad click to client CRM — with full visibility</p>
+
+<div class="flow">
+
+  <!-- PHASE 1: GENERATION -->
+  <div class="phase-label">Phase 1 — Lead Generation</div>
+
+  <div class="node node-consumer">
+    <span class="tag tag-gray">Starting Point</span>
+    <span class="node-icon">👤</span>
+    <div class="node-title">Consumer Sees Your Ad</div>
+    <div class="node-desc">Google Search, Meta/Instagram, or organic — targeted to a specific niche and location (e.g. "roofing quotes in Miami")</div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+    <div class="arrow-label">clicks ad</div>
+  </div>
+
+  <div class="node node-form">
+    <span class="tag tag-green">onkooz — Framer</span>
+    <span class="node-icon">📋</span>
+    <div class="node-title">Lead Capture Page</div>
+    <div class="node-desc">A landing page you build on your Framer site. Simple form: <strong style="color:#fff">Name · Phone · Email · Zip · What they need</strong>. No distractions, one goal — form submission.</div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+    <div class="arrow-label">form submitted</div>
+  </div>
+
+  <!-- PHASE 2: CAPTURE -->
+  <div class="phase-label">Phase 2 — Lead Captured (Your Database)</div>
+
+  <div class="node node-airtable">
+    <span class="tag tag-amber">Airtable — Free</span>
+    <span class="node-icon">🗄️</span>
+    <div class="node-title">Your Lead Database</div>
+    <div class="node-desc">Every lead lands here first. You see: <strong style="color:#fff">all contact info, which niche, which client it's assigned to, timestamp, and current status</strong>. This is your master record — always.</div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+    <div class="arrow-label">triggers automation</div>
+  </div>
+
+  <!-- PHASE 3: DISTRIBUTION -->
+  <div class="phase-label">Phase 3 — Automated Distribution</div>
+
+  <div class="node node-make">
+    <span class="tag tag-purple">Make.com — Free Tier</span>
+    <span class="node-icon">⚡</span>
+    <div class="node-title">Automation Engine</div>
+    <div class="node-desc">The moment a lead hits Airtable, Make.com fires. It:<br><br>
+      <strong style="color:#fff">1.</strong> Identifies which client gets this lead<br>
+      <strong style="color:#fff">2.</strong> Pushes contact data to their CRM via webhook<br>
+      <strong style="color:#fff">3.</strong> Sends the client an instant email/SMS alert<br>
+      <strong style="color:#fff">4.</strong> Updates lead status in Airtable to "Delivered"
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+    <div class="arrow-label">pushes to client</div>
+  </div>
+
+  <!-- FORK -->
+  <div class="phase-label">Phase 4 — Delivered to Client CRM</div>
+
+  <div class="fork-container">
+    <div class="fork-branch">
+      <div class="node node-client" style="width:260px;">
+        <span class="tag tag-cyan">If client uses GHL</span>
+        <span class="node-icon">🏢</span>
+        <div class="node-title">GHL Sub-Account</div>
+        <div class="node-desc">Lead appears directly in their pipeline. You can see their account as the agency admin — full visibility into contact status, notes, pipeline stage.</div>
+      </div>
+    </div>
+    <div class="fork-branch">
+      <div class="node node-client" style="width:260px;">
+        <span class="tag tag-cyan">If client uses other CRM</span>
+        <span class="node-icon">🏢</span>
+        <div class="node-title">HubSpot / Zoho / Any CRM</div>
+        <div class="node-desc">Make.com posts lead data via webhook or API to whatever CRM they use. Lead appears in their system automatically. Status updates flow back optionally.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arrow">
+    <div class="arrow-line"></div>
+    <div class="arrow-head"></div>
+    <div class="arrow-label">status updates back</div>
+  </div>
+
+  <!-- PHASE 5: VISIBILITY -->
+  <div class="phase-label">Phase 5 — Your Visibility</div>
+
+  <div class="node node-you">
+    <span class="tag tag-red">onkooz Dashboard</span>
+    <span class="node-icon">👁️</span>
+    <div class="node-title">You See Everything</div>
+    <div class="node-desc">
+      Back in your Airtable dashboard you track every lead across all clients:<br><br>
+      <strong style="color:#fff">· Delivered</strong> — sent to client CRM<br>
+      <strong style="color:#fff">· Contacted</strong> — client reached out<br>
+      <strong style="color:#fff">· Closed</strong> — deal won<br>
+      <strong style="color:#fff">· Bad Lead</strong> — refund/replace<br><br>
+      You can filter by client, niche, date, or status at any time.
+    </div>
+  </div>
+
+  <div class="visibility-bar">
+    <div class="dot"></div>
+    <p><strong>You never lose the lead.</strong> Even after it's sent to a client's CRM, your Airtable master record stays intact. The lead belongs to onkooz first — always.</p>
+  </div>
+
+</div>
+
+<!-- TOOL STACK -->
+<div style="max-width:860px;margin:3.5rem auto 0;border-top:1px solid rgba(255,255,255,0.06);padding-top:2.5rem;">
+  <p style="font-size:0.6rem;letter-spacing:0.3em;text-transform:uppercase;color:#444;margin-bottom:1.25rem;">Tool Stack</p>
+  <div class="tool-stack" style="margin-top:0;">
+    <div class="tool-card">
+      <div class="tool-name">Framer</div>
+      <div class="tool-role">Lead capture landing pages. You already have this.</div>
+      <div class="tool-cost free">FREE (existing)</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Airtable</div>
+      <div class="tool-role">Master lead database. Your source of truth for all leads.</div>
+      <div class="tool-cost free">FREE — up to 1,000 records</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Make.com</div>
+      <div class="tool-role">Automation engine. Pushes leads to any client CRM automatically.</div>
+      <div class="tool-cost free">FREE — 1,000 ops/month</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Client CRM</div>
+      <div class="tool-role">Whatever the client uses — GHL, HubSpot, Zoho, Salesforce. Make.com connects to all.</div>
+      <div class="tool-cost paid">Client's cost, not yours</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-name">Google / Meta Ads</div>
+      <div class="tool-role">Traffic source. Drives consumers to your capture pages.</div>
+      <div class="tool-cost paid">Ad spend — you set the budget</div>
+    </div>
+  </div>
+</div>
+
+<footer>onkooz digital — lead distribution system &nbsp;·&nbsp; built with airtable + make.com</footer>
+
+</body>
+</html>
