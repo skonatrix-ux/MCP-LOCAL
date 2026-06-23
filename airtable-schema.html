@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onkooz — Airtable Schema</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #0a0a0a;
+    color: #fff;
+    padding: 3rem 2rem 6rem;
+  }
+  h1 { text-align:center; font-size:clamp(1.3rem,3vw,2rem); font-weight:800; letter-spacing:.12em; text-transform:uppercase; margin-bottom:.4rem; }
+  .subtitle { text-align:center; font-size:.7rem; letter-spacing:.28em; text-transform:uppercase; color:#444; margin-bottom:3.5rem; }
+  .page { max-width:1080px; margin:0 auto; }
+
+  /* ── Section head ── */
+  .sh { font-size:.58rem; font-weight:700; letter-spacing:.35em; text-transform:uppercase; color:#444; margin-bottom:1rem; margin-top:3rem; padding-bottom:.5rem; border-bottom:1px solid rgba(255,255,255,.05); }
+
+  /* ── Table card ── */
+  .tables { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:1.25rem; }
+  .tbl {
+    border-radius:14px; border:1px solid rgba(255,255,255,.08);
+    overflow:hidden;
+  }
+  .tbl-head {
+    padding:1rem 1.25rem .85rem;
+    display:flex; align-items:center; gap:.75rem;
+  }
+  .tbl-icon { font-size:1.3rem; }
+  .tbl-info {}
+  .tbl-name { font-size:.82rem; font-weight:800; letter-spacing:.1em; text-transform:uppercase; }
+  .tbl-desc { font-size:.6rem; color:rgba(255,255,255,.35); margin-top:.15rem; letter-spacing:.05em; }
+  .tbl-body { padding:0 0 .5rem; }
+
+  /* ── Field row ── */
+  .field {
+    display:grid;
+    grid-template-columns: 28px 1fr 80px;
+    gap:.5rem;
+    align-items:start;
+    padding:.45rem 1.25rem;
+    border-top:1px solid rgba(255,255,255,.04);
+  }
+  .field:first-child { border-top:none; }
+  .field-type-icon { font-size:.75rem; color:rgba(255,255,255,.25); margin-top:2px; text-align:center; }
+  .field-name { font-size:.68rem; font-weight:600; color:rgba(255,255,255,.75); line-height:1.4; }
+  .field-note { font-size:.57rem; color:rgba(255,255,255,.25); margin-top:.1rem; line-height:1.4; font-weight:400; }
+  .field-badge {
+    font-size:.52rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    padding:2px 6px; border-radius:4px; text-align:center; white-space:nowrap;
+    align-self:start;
+  }
+
+  /* badge colours */
+  .b-text   { background:rgba(148,163,184,.1); color:#94a3b8; }
+  .b-num    { background:rgba(99,102,241,.12); color:#a5b4fc; }
+  .b-link   { background:rgba(6,182,212,.12);  color:#22d3ee; }
+  .b-sel    { background:rgba(245,158,11,.12); color:#fbbf24; }
+  .b-date   { background:rgba(34,197,94,.12);  color:#4ade80; }
+  .b-bool   { background:rgba(249,115,22,.12); color:#fb923c; }
+  .b-roll   { background:rgba(147,51,234,.12); color:#c084fc; }
+  .b-form   { background:rgba(239,68,68,.12);  color:#f87171; }
+  .b-url    { background:rgba(20,184,166,.12); color:#2dd4bf; }
+  .b-auto   { background:rgba(255,255,255,.06); color:#666; }
+
+  /* table accent colours */
+  .tbl-leads    { background:#0d1510; } .tbl-leads    .tbl-head { background:#111f15; border-bottom:1px solid rgba(22,163,74,.15); }
+  .tbl-clients  { background:#0d1018; } .tbl-clients  .tbl-head { background:#111726; border-bottom:1px solid rgba(59,130,246,.15); }
+  .tbl-niches   { background:#191000; } .tbl-niches   .tbl-head { background:#221500; border-bottom:1px solid rgba(245,158,11,.15); }
+  .tbl-delivery { background:#150d1a; } .tbl-delivery .tbl-head { background:#1e1226; border-bottom:1px solid rgba(147,51,234,.15); }
+  .tbl-billing  { background:#1a0d0d; } .tbl-billing  .tbl-head { background:#261212; border-bottom:1px solid rgba(239,68,68,.15); }
+  .tbl-tokens   { background:#0d1a0d; } .tbl-tokens   .tbl-head { background:#112011; border-bottom:1px solid rgba(34,197,94,.15); }
+  .tbl-audit    { background:#1a0d10; } .tbl-audit    .tbl-head { background:#26121a; border-bottom:1px solid rgba(244,63,94,.15); }
+  .tbl-reports  { background:#0d1819; } .tbl-reports  .tbl-head { background:#111f21; border-bottom:1px solid rgba(6,182,212,.15); }
+
+  /* ── Agent map ── */
+  .agent-map { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:.75rem; margin-top:1rem; }
+  .am-card {
+    background:#111; border:1px solid rgba(255,255,255,.07); border-radius:10px;
+    padding:.9rem 1.1rem;
+  }
+  .am-agent { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.1em; margin-bottom:.5rem; }
+  .am-reads { font-size:.6rem; color:rgba(255,255,255,.3); margin-bottom:.2rem; }
+  .am-reads span { color:#22d3ee; }
+  .am-writes { font-size:.6rem; color:rgba(255,255,255,.3); }
+  .am-writes span { color:#4ade80; }
+
+  /* ── Relations ── */
+  .rel-row { display:flex; flex-wrap:wrap; gap:.6rem; margin-top:1rem; }
+  .rel-pill {
+    display:flex; align-items:center; gap:.5rem;
+    background:#111; border:1px solid rgba(255,255,255,.07);
+    border-radius:8px; padding:.5rem .85rem;
+    font-size:.62rem; color:rgba(255,255,255,.45);
+  }
+  .rel-pill strong { color:#fff; font-weight:700; }
+  .rel-arrow { color:#333; }
+
+  /* ── Status values ── */
+  .status-grid { display:flex; flex-wrap:wrap; gap:.5rem; margin-top:1rem; }
+  .status-val {
+    font-size:.6rem; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    padding:3px 10px; border-radius:999px; border:1px solid;
+  }
+
+  @media(max-width:600px){ .tables{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>onkooz — Airtable Schema</h1>
+<p class="subtitle">8 tables · all 10 agents plug in here</p>
+
+<!-- ═══════════════════════════════ TABLES ═══════════════════════════════ -->
+<div class="sh">The 8 Tables</div>
+<div class="tables">
+
+  <!-- ── LEADS ── -->
+  <div class="tbl tbl-leads">
+    <div class="tbl-head">
+      <span class="tbl-icon">📋</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Leads</div>
+        <div class="tbl-desc">Master record for every lead. Source of truth.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">🔑</span><div><div class="field-name">lead_id</div><div class="field-note">Auto-generated unique ID</div></div><span class="field-badge b-auto">Auto #</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">created_at</div><div class="field-note">Form submission timestamp</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">Aa</span><div><div class="field-name">full_name</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">@</span><div><div class="field-name">email</div></div><span class="field-badge b-text">Email</span></div>
+      <div class="field"><span class="field-type-icon">📞</span><div><div class="field-name">phone</div></div><span class="field-badge b-text">Phone</span></div>
+      <div class="field"><span class="field-type-icon">📍</span><div><div class="field-name">zip_code</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">niche</div><div class="field-note">Links to Niches table</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">💬</span><div><div class="field-name">message</div><div class="field-note">What they need — sanitized before AI use</div></div><span class="field-badge b-text">Long text</span></div>
+      <div class="field"><span class="field-type-icon">📡</span><div><div class="field-name">source</div><div class="field-note">Google, Meta, Organic, etc.</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">🌐</span><div><div class="field-name">ip_address</div><div class="field-note">For rate limiting + Red Team</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">quality_score</div><div class="field-note">1–10, set by Qualify Agent</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">💭</span><div><div class="field-name">score_reason</div><div class="field-note">AI's reasoning (internal only)</div></div><span class="field-badge b-text">Long text</span></div>
+      <div class="field"><span class="field-type-icon">🚦</span><div><div class="field-name">status</div><div class="field-note">New → Validated → Scored → Routed → Delivered → Contacted → Closed / Lost</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">assigned_client</div><div class="field-note">Links to Clients table</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">💳</span><div><div class="field-name">billing_id</div><div class="field-note">Unique — prevents double billing</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">delivery_attempts</div><div class="field-note">Increments on each retry</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">delivered_at</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">client_responded_at</div><div class="field-note">Populated by client CRM webhook</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">followup_count</div><div class="field-note">Max 2 before re-route</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">⚠️</span><div><div class="field-name">escalated</div></div><span class="field-badge b-bool">Checkbox</span></div>
+      <div class="field"><span class="field-type-icon">📝</span><div><div class="field-name">escalation_reason</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">🗂️</span><div><div class="field-name">archived</div><div class="field-note">Set true after 90 days</div></div><span class="field-badge b-bool">Checkbox</span></div>
+      <div class="field"><span class="field-type-icon">🚩</span><div><div class="field-name">quarantined</div><div class="field-note">Red Team flagged — holds for review</div></div><span class="field-badge b-bool">Checkbox</span></div>
+    </div>
+  </div>
+
+  <!-- ── CLIENTS ── -->
+  <div class="tbl tbl-clients">
+    <div class="tbl-head">
+      <span class="tbl-icon">🏢</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Clients</div>
+        <div class="tbl-desc">Businesses buying leads from onkooz.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">🔑</span><div><div class="field-name">client_id</div></div><span class="field-badge b-auto">Auto #</span></div>
+      <div class="field"><span class="field-type-icon">Aa</span><div><div class="field-name">business_name</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">Aa</span><div><div class="field-name">contact_name</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">@</span><div><div class="field-name">email</div></div><span class="field-badge b-text">Email</span></div>
+      <div class="field"><span class="field-type-icon">📞</span><div><div class="field-name">phone</div></div><span class="field-badge b-text">Phone</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">niches</div><div class="field-note">One client can cover multiple niches</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">📍</span><div><div class="field-name">service_zips</div><div class="field-note">Comma-separated zip codes or radius</div></div><span class="field-badge b-text">Long text</span></div>
+      <div class="field"><span class="field-type-icon">🖥️</span><div><div class="field-name">crm_type</div><div class="field-note">GHL, HubSpot, Zoho, Salesforce, Other</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">webhook_url</div><div class="field-note">Where Make.com POSTs leads</div></div><span class="field-badge b-url">URL</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">monthly_lead_cap</div><div class="field-note">Max leads per calendar month</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">leads_this_month</div><div class="field-note">Rollup from Leads table</div></div><span class="field-badge b-roll">Rollup</span></div>
+      <div class="field"><span class="field-type-icon">💰</span><div><div class="field-name">pricing_model</div><div class="field-note">Per-lead, Shared, Exclusive</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">$</span><div><div class="field-name">price_per_lead</div></div><span class="field-badge b-num">Currency</span></div>
+      <div class="field"><span class="field-type-icon">🚦</span><div><div class="field-name">status</div><div class="field-note">Active, Paused, Unresponsive, Churned</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">response_rate</div><div class="field-note">% of leads contacted within 24hrs</div></div><span class="field-badge b-num">%</span></div>
+      <div class="field"><span class="field-type-icon">💳</span><div><div class="field-name">stripe_customer_id</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">backup_client</div><div class="field-note">Re-route destination if unresponsive</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">joined_date</div></div><span class="field-badge b-date">Date</span></div>
+    </div>
+  </div>
+
+  <!-- ── NICHES ── -->
+  <div class="tbl tbl-niches">
+    <div class="tbl-head">
+      <span class="tbl-icon">🏷️</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Niches</div>
+        <div class="tbl-desc">Lead categories. Route Agent uses this to match.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">Aa</span><div><div class="field-name">niche_name</div><div class="field-note">Roofing, HVAC, Legal, Dental, etc.</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">📝</span><div><div class="field-name">keywords</div><div class="field-note">Used by rule-based fallback scoring</div></div><span class="field-badge b-text">Long text</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">active_clients</div><div class="field-note">Rollup — how many clients want this niche</div></div><span class="field-badge b-roll">Rollup</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">leads_this_month</div><div class="field-note">Volume tracking per category</div></div><span class="field-badge b-roll">Rollup</span></div>
+      <div class="field"><span class="field-type-icon">$</span><div><div class="field-name">avg_price_per_lead</div><div class="field-note">Rollup from Clients for reporting</div></div><span class="field-badge b-roll">Rollup</span></div>
+      <div class="field"><span class="field-type-icon">✅</span><div><div class="field-name">active</div><div class="field-note">Toggle off to pause a whole niche</div></div><span class="field-badge b-bool">Checkbox</span></div>
+    </div>
+  </div>
+
+  <!-- ── DELIVERY LOG ── -->
+  <div class="tbl tbl-delivery">
+    <div class="tbl-head">
+      <span class="tbl-icon">📬</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Delivery Log</div>
+        <div class="tbl-desc">Every delivery attempt logged. Retry audit trail.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">🔑</span><div><div class="field-name">log_id</div></div><span class="field-badge b-auto">Auto #</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">lead</div><div class="field-note">Links to Leads</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">client</div><div class="field-note">Links to Clients</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">attempt_number</div><div class="field-note">1, 2, or 3</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">attempted_at</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">🚦</span><div><div class="field-name">result</div><div class="field-note">Success, Failed, Pending</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">http_response_code</div><div class="field-note">200, 404, 500, timeout, etc.</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">📝</span><div><div class="field-name">error_message</div><div class="field-note">Raw error from webhook if failed</div></div><span class="field-badge b-text">Long text</span></div>
+    </div>
+  </div>
+
+  <!-- ── BILLING ── -->
+  <div class="tbl tbl-billing">
+    <div class="tbl-head">
+      <span class="tbl-icon">💳</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Billing</div>
+        <div class="tbl-desc">Invoice records per client per cycle.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">🔑</span><div><div class="field-name">invoice_id</div><div class="field-note">Idempotency key — never created twice</div></div><span class="field-badge b-auto">Auto #</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">client</div><div class="field-note">Links to Clients</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">period_start</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">period_end</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">leads_delivered</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">credits_applied</div><div class="field-note">Bad leads refunded</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">net_leads_billed</div><div class="field-note">Formula: delivered − credits</div></div><span class="field-badge b-form">Formula</span></div>
+      <div class="field"><span class="field-type-icon">$</span><div><div class="field-name">amount_due</div><div class="field-note">Formula: net_leads × price_per_lead</div></div><span class="field-badge b-form">Formula</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">invoice_sent_at</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">paid_at</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">Aa</span><div><div class="field-name">stripe_invoice_id</div></div><span class="field-badge b-text">Text</span></div>
+      <div class="field"><span class="field-type-icon">🚦</span><div><div class="field-name">status</div><div class="field-note">Draft, Sent, Paid, Overdue</div></div><span class="field-badge b-sel">Select</span></div>
+    </div>
+  </div>
+
+  <!-- ── TOKEN USAGE ── -->
+  <div class="tbl tbl-tokens">
+    <div class="tbl-head">
+      <span class="tbl-icon">🚦</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Token Usage</div>
+        <div class="tbl-desc">Token Police Agent writes here every run.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">date</div><div class="field-note">One row per day</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">claude_tokens_used</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">$</span><div><div class="field-name">claude_cost_usd</div><div class="field-note">Formula from token count × model rate</div></div><span class="field-badge b-form">Formula</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">make_ops_used</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">#</span><div><div class="field-name">airtable_record_count</div></div><span class="field-badge b-num">Number</span></div>
+      <div class="field"><span class="field-type-icon">🤖</span><div><div class="field-name">model_used</div><div class="field-note">sonnet, haiku, or rule-based</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">🚦</span><div><div class="field-name">budget_status</div><div class="field-note">OK, Warning, Critical</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">📝</span><div><div class="field-name">notes</div><div class="field-note">Any anomalies logged this day</div></div><span class="field-badge b-text">Text</span></div>
+    </div>
+  </div>
+
+  <!-- ── AUDIT LOG ── -->
+  <div class="tbl tbl-audit">
+    <div class="tbl-head">
+      <span class="tbl-icon">🔴</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Audit Log</div>
+        <div class="tbl-desc">Red Team Agent writes here nightly.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">🔑</span><div><div class="field-name">audit_id</div></div><span class="field-badge b-auto">Auto #</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">audit_date</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">🤖</span><div><div class="field-name">agent</div><div class="field-note">Which agent raised this finding</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">🏷️</span><div><div class="field-name">finding_type</div><div class="field-note">Bot flood, Prompt injection, Billing discrepancy, Delivery failure, Anomaly</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">⚠️</span><div><div class="field-name">severity</div><div class="field-note">Low, Medium, High, Critical</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">📝</span><div><div class="field-name">description</div></div><span class="field-badge b-text">Long text</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">affected_leads</div><div class="field-note">Links to Leads — which records are implicated</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">✅</span><div><div class="field-name">resolved</div></div><span class="field-badge b-bool">Checkbox</span></div>
+      <div class="field"><span class="field-type-icon">📝</span><div><div class="field-name">resolution_notes</div></div><span class="field-badge b-text">Long text</span></div>
+    </div>
+  </div>
+
+  <!-- ── REPORTS ── -->
+  <div class="tbl tbl-reports">
+    <div class="tbl-head">
+      <span class="tbl-icon">📊</span>
+      <div class="tbl-info">
+        <div class="tbl-name">Reports</div>
+        <div class="tbl-desc">Every generated report tracked here.</div>
+      </div>
+    </div>
+    <div class="tbl-body">
+      <div class="field"><span class="field-type-icon">🔑</span><div><div class="field-name">report_id</div></div><span class="field-badge b-auto">Auto #</span></div>
+      <div class="field"><span class="field-type-icon">🏷️</span><div><div class="field-name">report_type</div><div class="field-note">Internal (you) or Client-facing</div></div><span class="field-badge b-sel">Select</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">client</div><div class="field-note">Null for internal reports</div></div><span class="field-badge b-link">Link</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">period_start</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">period_end</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">generated_at</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">📅</span><div><div class="field-name">sent_at</div></div><span class="field-badge b-date">Date</span></div>
+      <div class="field"><span class="field-type-icon">🔗</span><div><div class="field-name">report_link</div><div class="field-note">Password-protected Airtable shared view</div></div><span class="field-badge b-url">URL</span></div>
+      <div class="field"><span class="field-type-icon">🚦</span><div><div class="field-name">status</div><div class="field-note">Generating, Sent, Failed</div></div><span class="field-badge b-sel">Select</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════ RELATIONS ═══════════════════════════════ -->
+<div class="sh">Table Relationships</div>
+<div class="rel-row">
+  <div class="rel-pill"><strong>Leads</strong> <span class="rel-arrow">→</span> Clients <span style="color:#555;font-size:.55rem">many-to-one</span></div>
+  <div class="rel-pill"><strong>Leads</strong> <span class="rel-arrow">→</span> Niches <span style="color:#555;font-size:.55rem">many-to-one</span></div>
+  <div class="rel-pill"><strong>Clients</strong> <span class="rel-arrow">→</span> Niches <span style="color:#555;font-size:.55rem">many-to-many</span></div>
+  <div class="rel-pill"><strong>Delivery Log</strong> <span class="rel-arrow">→</span> Leads <span style="color:#555;font-size:.55rem">many-to-one</span></div>
+  <div class="rel-pill"><strong>Delivery Log</strong> <span class="rel-arrow">→</span> Clients <span style="color:#555;font-size:.55rem">many-to-one</span></div>
+  <div class="rel-pill"><strong>Billing</strong> <span class="rel-arrow">→</span> Clients <span style="color:#555;font-size:.55rem">many-to-one</span></div>
+  <div class="rel-pill"><strong>Audit Log</strong> <span class="rel-arrow">→</span> Leads <span style="color:#555;font-size:.55rem">many-to-many</span></div>
+  <div class="rel-pill"><strong>Reports</strong> <span class="rel-arrow">→</span> Clients <span style="color:#555;font-size:.55rem">many-to-one (nullable)</span></div>
+  <div class="rel-pill"><strong>Clients</strong> <span class="rel-arrow">→</span> Clients <span style="color:#555;font-size:.55rem">self-ref backup</span></div>
+</div>
+
+<!-- ═══════════════════════════════ AGENT MAP ═══════════════════════════════ -->
+<div class="sh">Which Agent Reads / Writes Which Table</div>
+<div class="agent-map">
+  <div class="am-card">
+    <div class="am-agent">🔍 Intake Agent</div>
+    <div class="am-reads">Reads: <span>Leads (dup check), Token Usage</span></div>
+    <div class="am-writes">Writes: <span>Leads (new row), Audit Log (if rejected)</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">🧠 Qualify Agent</div>
+    <div class="am-reads">Reads: <span>Leads, Niches (keywords), Token Usage</span></div>
+    <div class="am-writes">Writes: <span>Leads (quality_score, score_reason, niche), Token Usage</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">🗺️ Route Agent</div>
+    <div class="am-reads">Reads: <span>Leads, Clients (niche, zip, cap, status)</span></div>
+    <div class="am-writes">Writes: <span>Leads (assigned_client, status→Routed)</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">⚡ Deliver Agent</div>
+    <div class="am-reads">Reads: <span>Leads, Clients (webhook_url)</span></div>
+    <div class="am-writes">Writes: <span>Leads (status, delivered_at), Delivery Log</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">⏰ Follow-Up Agent</div>
+    <div class="am-reads">Reads: <span>Leads (delivered_at, followup_count), Clients</span></div>
+    <div class="am-writes">Writes: <span>Leads (followup_count, status), Clients (response_rate)</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">📊 Report Agent</div>
+    <div class="am-reads">Reads: <span>Leads, Clients, Billing, Token Usage, Niches</span></div>
+    <div class="am-writes">Writes: <span>Reports (new row per client + internal)</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">💳 Billing Agent</div>
+    <div class="am-reads">Reads: <span>Leads (billing_id, status), Clients (price, stripe_id)</span></div>
+    <div class="am-writes">Writes: <span>Billing (invoice), Leads (billing_id if null)</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">🎛️ Management Agent</div>
+    <div class="am-reads">Reads: <span>All tables — monitors status fields</span></div>
+    <div class="am-writes">Writes: <span>Leads (escalated, escalation_reason), Audit Log</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">🚦 Token Police</div>
+    <div class="am-reads">Reads: <span>Token Usage, Leads (record count)</span></div>
+    <div class="am-writes">Writes: <span>Token Usage (daily row), Audit Log (if budget alert)</span></div>
+  </div>
+  <div class="am-card">
+    <div class="am-agent">🔴 Red Team Agent</div>
+    <div class="am-reads">Reads: <span>Leads, Delivery Log, Billing, Token Usage</span></div>
+    <div class="am-writes">Writes: <span>Audit Log, Leads (quarantined flag)</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ LEAD STATUS VALUES ═══════════════════════════════ -->
+<div class="sh">Lead Status Flow — All Possible Values</div>
+<div class="status-grid">
+  <span class="status-val" style="background:rgba(148,163,184,.08);border-color:rgba(148,163,184,.2);color:#94a3b8;">New</span>
+  <span style="color:#333;align-self:center;">→</span>
+  <span class="status-val" style="background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.2);color:#4ade80;">Validated</span>
+  <span style="color:#333;align-self:center;">→</span>
+  <span class="status-val" style="background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.2);color:#60a5fa;">Scored</span>
+  <span style="color:#333;align-self:center;">→</span>
+  <span class="status-val" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:#fbbf24;">Routed</span>
+  <span style="color:#333;align-self:center;">→</span>
+  <span class="status-val" style="background:rgba(147,51,234,.08);border-color:rgba(147,51,234,.2);color:#c084fc;">Delivered</span>
+  <span style="color:#333;align-self:center;">→</span>
+  <span class="status-val" style="background:rgba(6,182,212,.08);border-color:rgba(6,182,212,.2);color:#22d3ee;">Contacted</span>
+  <span style="color:#333;align-self:center;">→</span>
+  <span class="status-val" style="background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3);color:#4ade80;">Closed ✓</span>
+  <span style="color:#333;align-self:center;padding:0 .25rem;">or</span>
+  <span class="status-val" style="background:rgba(148,163,184,.06);border-color:rgba(148,163,184,.15);color:#64748b;">Lost</span>
+  <div style="width:100%;height:0"></div>
+  <span class="status-val" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#f87171;">Rejected</span>
+  <span class="status-val" style="background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.2);color:#fb923c;">Unrouted</span>
+  <span class="status-val" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.15);color:#ef4444;">Delivery Failed</span>
+  <span class="status-val" style="background:rgba(244,63,94,.08);border-color:rgba(244,63,94,.2);color:#fb7185;">Quarantined</span>
+  <span class="status-val" style="background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.2);color:#a5b4fc;">Escalated</span>
+  <span class="status-val" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.08);color:#555;">Archived</span>
+</div>
+
+</div>
+</body>
+</html>
