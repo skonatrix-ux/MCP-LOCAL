@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>onkooz — Lead Business Brief for Sam</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  :root {
+    --blue:   #2563eb;
+    --green:  #16a34a;
+    --amber:  #d97706;
+    --purple: #7c3aed;
+    --red:    #dc2626;
+    --cyan:   #0891b2;
+    --ink:    #111827;
+    --muted:  #6b7280;
+    --border: #e5e7eb;
+    --bg:     #f9fafb;
+  }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+
+  body {
+    font-family:'Inter',sans-serif;
+    background:#fff;
+    color:var(--ink);
+    font-size:10.5pt;
+    line-height:1.6;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background:#0a0a0a;
+    color:#fff;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    padding:4rem 4rem 3rem;
+    page-break-after:always;
+  }
+  .cover-top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .cover-logo { font-size:1rem; font-weight:900; letter-spacing:.15em; text-transform:uppercase; }
+  .cover-logo span { color:#3b82f6; }
+  .cover-date { font-size:.65rem; color:#555; letter-spacing:.15em; text-transform:uppercase; }
+  .cover-body { flex:1; display:flex; flex-direction:column; justify-content:center; padding:6rem 0 4rem; }
+  .cover-tag { font-size:.65rem; font-weight:700; letter-spacing:.4em; text-transform:uppercase; color:#555; margin-bottom:1.5rem; }
+  .cover-h1 { font-size:clamp(3rem,7vw,5rem); font-weight:900; line-height:.9; letter-spacing:-.03em; text-transform:uppercase; margin-bottom:2rem; }
+  .cover-h1 .accent { color:#3b82f6; }
+  .cover-desc { font-size:.9rem; color:#888; max-width:480px; line-height:1.8; }
+  .cover-bottom { display:grid; grid-template-columns:repeat(4,1fr); gap:2rem; border-top:1px solid rgba(255,255,255,.08); padding-top:2rem; }
+  .cover-stat-val { font-size:1.6rem; font-weight:800; margin-bottom:.2rem; }
+  .cover-stat-label { font-size:.58rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#555; }
+
+  /* ── PAGE SHELL ── */
+  .doc-page {
+    max-width:860px;
+    margin:0 auto;
+    padding:4rem 4rem;
+  }
+  @media(max-width:700px){ .doc-page{ padding:2.5rem 1.5rem; } }
+
+  /* ── CHAPTER HEADER ── */
+  .chapter {
+    page-break-before:always;
+    padding:3rem 4rem 0;
+    max-width:860px;
+    margin:0 auto;
+  }
+  .chapter-num { font-size:.6rem; font-weight:700; letter-spacing:.4em; text-transform:uppercase; color:var(--muted); margin-bottom:.5rem; }
+  .chapter-title { font-size:1.8rem; font-weight:900; letter-spacing:-.02em; text-transform:uppercase; line-height:1; margin-bottom:.6rem; }
+  .chapter-desc { font-size:.82rem; color:var(--muted); max-width:560px; line-height:1.8; margin-bottom:2rem; padding-bottom:1.5rem; border-bottom:2px solid var(--border); }
+
+  /* ── SECTION HEAD ── */
+  .sh { font-size:.58rem; font-weight:700; letter-spacing:.35em; text-transform:uppercase; color:var(--muted); margin:2.5rem 0 1rem; padding-bottom:.5rem; border-bottom:1px solid var(--border); }
+
+  /* ── OVERVIEW GRID ── */
+  .overview-grid { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+  .ov-card { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:1.25rem; }
+  .ov-card-icon { font-size:1.4rem; margin-bottom:.5rem; }
+  .ov-card-title { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.35rem; }
+  .ov-card-desc { font-size:.7rem; color:var(--muted); line-height:1.7; }
+
+  /* ── FLOW STEPS ── */
+  .flow-steps { display:flex; flex-direction:column; gap:0; }
+  .flow-step { display:flex; gap:1.25rem; }
+  .flow-line { display:flex; flex-direction:column; align-items:center; }
+  .flow-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.7rem; font-weight:800; flex-shrink:0; color:#fff; }
+  .flow-connector { width:2px; flex:1; background:var(--border); margin:4px 0; min-height:16px; }
+  .flow-content { padding-bottom:1.25rem; flex:1; padding-top:4px; }
+  .flow-content-title { font-size:.8rem; font-weight:700; margin-bottom:.2rem; }
+  .flow-content-desc { font-size:.68rem; color:var(--muted); line-height:1.65; }
+  .flow-tag { font-size:.55rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; padding:2px 8px; border-radius:999px; display:inline-block; margin-bottom:.4rem; }
+
+  /* ── AGENT CARDS ── */
+  .agent-grid { display:grid; grid-template-columns:1fr 1fr; gap:.85rem; }
+  .ag { border-radius:10px; border:1px solid; padding:1.1rem; }
+  .ag-icon { font-size:1.2rem; margin-bottom:.4rem; display:block; }
+  .ag-name { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.08em; margin-bottom:.2rem; }
+  .ag-trigger { font-size:.57rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; padding:2px 7px; border-radius:999px; display:inline-block; margin-bottom:.55rem; }
+  .ag-tasks { list-style:none; }
+  .ag-tasks li { font-size:.65rem; color:var(--muted); padding-left:.9rem; position:relative; line-height:1.55; margin-bottom:.25rem; }
+  .ag-tasks li::before { content:'→'; position:absolute; left:0; color:#ccc; }
+
+  .ag-blue   { background:#eff6ff; border-color:#bfdbfe; }
+  .ag-green  { background:#f0fdf4; border-color:#bbf7d0; }
+  .ag-amber  { background:#fffbeb; border-color:#fde68a; }
+  .ag-purple { background:#faf5ff; border-color:#e9d5ff; }
+  .ag-orange { background:#fff7ed; border-color:#fed7aa; }
+  .ag-cyan   { background:#ecfeff; border-color:#a5f3fc; }
+  .ag-red    { background:#fef2f2; border-color:#fecaca; }
+  .ag-indigo { background:#eef2ff; border-color:#c7d2fe; }
+  .ag-rose   { background:#fff1f2; border-color:#fecdd3; }
+  .ag-teal   { background:#f0fdfa; border-color:#99f6e4; }
+
+  .t-blue   { background:#dbeafe; color:#1d4ed8; }
+  .t-green  { background:#dcfce7; color:#15803d; }
+  .t-amber  { background:#fef3c7; color:#d97706; }
+  .t-purple { background:#ede9fe; color:#6d28d9; }
+  .t-orange { background:#ffedd5; color:#c2410c; }
+  .t-cyan   { background:#cffafe; color:#0e7490; }
+  .t-red    { background:#fee2e2; color:#b91c1c; }
+  .t-indigo { background:#e0e7ff; color:#4338ca; }
+  .t-rose   { background:#ffe4e6; color:#be123c; }
+  .t-teal   { background:#ccfbf1; color:#0f766e; }
+
+  /* ── VULN CARDS ── */
+  .vuln-list { display:flex; flex-direction:column; gap:.85rem; }
+  .vuln { border-radius:10px; border:1px solid; padding:1.1rem 1.25rem; }
+  .vuln-head { display:flex; align-items:flex-start; gap:.75rem; margin-bottom:.65rem; }
+  .vuln-icon { font-size:1.1rem; flex-shrink:0; }
+  .vuln-title { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; flex:1; line-height:1.3; }
+  .vuln-sev { font-size:.52rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; padding:2px 8px; border-radius:999px; flex-shrink:0; }
+  .vuln-desc { font-size:.67rem; color:var(--muted); line-height:1.7; margin-bottom:.7rem; }
+  .vuln-fix { font-size:.67rem; line-height:1.65; padding:.7rem .9rem; border-radius:7px; }
+  .vuln-fix-label { font-size:.55rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; margin-bottom:.25rem; }
+
+  .vc { background:#fef2f2; border-color:#fecaca; }
+  .vc .vuln-title { color:#b91c1c; }
+  .vc .vuln-sev { background:#fee2e2; color:#b91c1c; }
+  .vc .vuln-fix { background:#f0fdf4; }
+  .vc .vuln-fix-label { color:#15803d; }
+  .vc .vuln-fix { color:#166534; }
+
+  .vh { background:#fff7ed; border-color:#fed7aa; }
+  .vh .vuln-title { color:#c2410c; }
+  .vh .vuln-sev { background:#ffedd5; color:#c2410c; }
+  .vh .vuln-fix { background:#f0fdf4; }
+  .vh .vuln-fix-label { color:#15803d; }
+  .vh .vuln-fix { color:#166534; }
+
+  .vl { background:#fdf4ff; border-color:#e9d5ff; }
+  .vl .vuln-title { color:#6d28d9; }
+  .vl .vuln-sev { background:#ede9fe; color:#6d28d9; }
+  .vl .vuln-fix { background:#f0fdf4; }
+  .vl .vuln-fix-label { color:#15803d; }
+  .vl .vuln-fix { color:#166534; }
+
+  /* ── SCHEMA TABLE ── */
+  .schema-table { width:100%; border-collapse:collapse; font-size:.68rem; margin-top:.75rem; }
+  .schema-table th { text-align:left; font-size:.57rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); padding:.5rem .75rem; border-bottom:2px solid var(--border); }
+  .schema-table td { padding:.5rem .75rem; border-bottom:1px solid #f3f4f6; vertical-align:top; line-height:1.5; }
+  .schema-table tr:last-child td { border-bottom:none; }
+  .fname { font-family:monospace; font-size:.65rem; font-weight:700; color:var(--ink); }
+  .ftype { font-size:.55rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:2px 6px; border-radius:4px; background:#f3f4f6; color:#6b7280; }
+  .fnote { color:var(--muted); }
+
+  /* ── TOOL STACK ── */
+  .tool-stack { display:grid; grid-template-columns:repeat(3,1fr); gap:.75rem; }
+  .tool { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:1rem 1.1rem; }
+  .tool-name { font-size:.75rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; margin-bottom:.2rem; }
+  .tool-role { font-size:.65rem; color:var(--muted); line-height:1.5; margin-bottom:.35rem; }
+  .tool-cost { font-size:.6rem; font-weight:700; letter-spacing:.1em; }
+  .free { color:var(--green); }
+  .paid { color:var(--amber); }
+
+  /* ── BUILD STEPS ── */
+  .build-step { display:flex; gap:1rem; margin-bottom:1.1rem; align-items:flex-start; }
+  .bs-num { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.68rem; font-weight:800; flex-shrink:0; color:#fff; background:var(--ink); }
+  .bs-body { flex:1; }
+  .bs-title { font-size:.78rem; font-weight:700; margin-bottom:.2rem; }
+  .bs-desc { font-size:.67rem; color:var(--muted); line-height:1.65; }
+  .bs-time { font-size:.55rem; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); margin-top:.2rem; }
+
+  /* ── CALLOUT ── */
+  .callout { border-radius:10px; padding:1rem 1.25rem; margin:1rem 0; display:flex; gap:.75rem; align-items:flex-start; }
+  .callout p { font-size:.7rem; line-height:1.7; }
+  .callout-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+  .callout-blue  { background:#eff6ff; border:1px solid #bfdbfe; }
+  .callout-green { background:#f0fdf4; border:1px solid #bbf7d0; }
+  .callout-amber { background:#fffbeb; border:1px solid #fde68a; }
+  .callout-red   { background:#fef2f2; border:1px solid #fecaca; }
+
+  /* ── TWO COL ── */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+
+  /* ── SUMMARY BOX ── */
+  .summary-box {
+    background:#0a0a0a; color:#fff; border-radius:14px;
+    padding:2.5rem; margin-top:2.5rem; page-break-inside:avoid;
+  }
+  .summary-box h3 { font-size:.9rem; font-weight:800; text-transform:uppercase; letter-spacing:.1em; margin-bottom:1.5rem; }
+  .sum-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+  .sum-item { background:rgba(255,255,255,.05); border-radius:8px; padding:.9rem 1rem; }
+  .sum-label { font-size:.55rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:#555; margin-bottom:.3rem; }
+  .sum-val { font-size:.95rem; font-weight:800; }
+  .sum-note { font-size:.6rem; color:#555; margin-top:.15rem; line-height:1.4; }
+
+  /* ── LOOPBACK TABLE ── */
+  .lb-table { width:100%; border-collapse:collapse; font-size:.68rem; }
+  .lb-table th { text-align:left; font-size:.57rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase; color:var(--muted); padding:.5rem .75rem; border-bottom:2px solid var(--border); }
+  .lb-table td { padding:.6rem .75rem; border-bottom:1px solid #f3f4f6; vertical-align:top; line-height:1.5; }
+  .lb-table tr:last-child td { border-bottom:none; }
+  .lb-from { font-size:.65rem; color:var(--muted); }
+  .lb-to { font-weight:700; color:var(--ink); }
+  .lb-why { color:var(--muted); }
+
+  /* ── PRINT ── */
+  @media print {
+    body { font-size:9.5pt; }
+    .cover { min-height:100vh; }
+    .chapter { page-break-before:always; }
+    .no-break { page-break-inside:avoid; }
+    @page { margin:0; size:A4; }
+  }
+
+  /* ── DIVIDER ── */
+  hr { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+
+  /* ── PRINT BUTTON ── */
+  .print-bar {
+    position:fixed; bottom:1.5rem; right:1.5rem; z-index:999;
+    display:flex; gap:.6rem;
+  }
+  .print-btn {
+    background:#0a0a0a; color:#fff; border:none; border-radius:8px;
+    padding:.7rem 1.4rem; font-size:.72rem; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; cursor:pointer;
+  }
+  .print-btn:hover { background:#222; }
+  @media print { .print-bar { display:none; } }
+</style>
+</head>
+<body>
+
+<!-- PRINT BUTTON -->
+<div class="print-bar">
+  <button class="print-btn" onclick="window.print()">⬇ Save as PDF</button>
+</div>
+
+<!-- ══════════════════════════ COVER ══════════════════════════ -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-logo">on<span>kooz</span> digital</div>
+    <div class="cover-date">Prepared June 2026</div>
+  </div>
+  <div class="cover-body">
+    <div class="cover-tag">Confidential — For Sam</div>
+    <div class="cover-h1">The<br><span class="accent">Lead</span><br>Business</div>
+    <div class="cover-desc">A complete brief covering what we're building, how it works, the tools involved, the risks we've eliminated, and the step-by-step plan to launch. Everything you need to understand the operation and your role in it.</div>
+  </div>
+  <div class="cover-bottom">
+    <div><div class="cover-stat-val" style="color:#3b82f6;">$0</div><div class="cover-stat-label">Cost to start</div></div>
+    <div><div class="cover-stat-val" style="color:#4ade80;">10</div><div class="cover-stat-label">Automated agents</div></div>
+    <div><div class="cover-stat-val" style="color:#fbbf24;">~2 wks</div><div class="cover-stat-label">Time to launch</div></div>
+    <div><div class="cover-stat-val" style="color:#c084fc;">24/7</div><div class="cover-stat-label">Runs itself</div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ CH 1 — WHAT WE'RE BUILDING ══════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-num">Chapter 01</div>
+  <div class="chapter-title">What We're Building</div>
+  <div class="chapter-desc">onkooz is adding a lead generation and distribution business. We generate leads from consumers looking for local services, then sell those leads to the businesses that serve them — with full automation, real-time delivery, and reporting on both sides.</div>
+</div>
+<div class="doc-page" style="padding-top:1.5rem;">
+
+  <div class="sh">The Business Model in Plain English</div>
+  <div class="two-col">
+    <div class="callout callout-blue">
+      <span class="callout-icon">👤</span>
+      <p><strong>Consumer side:</strong> Someone in Miami needs a new roof. They find our landing page, fill out a short form — name, phone, email, zip, what they need. They hit submit.</p>
+    </div>
+    <div class="callout callout-green">
+      <span class="callout-icon">🏢</span>
+      <p><strong>Business side:</strong> A roofing company in Miami has paid us to receive exactly these leads. Within 60 seconds of the form submit, they get the consumer's contact info pushed directly into their CRM, plus an SMS and email alert.</p>
+    </div>
+  </div>
+  <div class="callout callout-amber" style="margin-top:.85rem;">
+    <span class="callout-icon">💰</span>
+    <p><strong>How we make money:</strong> We charge the roofing company per lead — typically $30–$150 depending on the niche and whether it's exclusive. We generate the leads through paid ads (Google, Meta) and organic traffic. The margin is the difference between what we pay to acquire the lead and what we charge to deliver it.</p>
+  </div>
+
+  <div class="sh">Three Types of Leads We Sell</div>
+  <div class="overview-grid">
+    <div class="ov-card">
+      <div class="ov-card-icon">🎯</div>
+      <div class="ov-card-title">Exclusive Leads</div>
+      <div class="ov-card-desc">Sold to one client only. Highest price ($75–$150). Consumer only gets called by one business. Higher close rate for the client. We only generate one lead capture form per niche per territory for exclusive deals.</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-icon">🔀</div>
+      <div class="ov-card-title">Shared Leads</div>
+      <div class="ov-card-desc">Sold to 2–4 clients simultaneously. Lower price ($25–$50). Consumer may get called by multiple businesses. Lower margin per lead but higher volume makes up for it.</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-icon">🏭</div>
+      <div class="ov-card-title">Niche Verticals</div>
+      <div class="ov-card-desc">We pick specific industries to dominate: Roofing, HVAC, Legal, Dental, Home Services. Starting with one niche and one territory makes everything simpler and lets us prove the model before scaling.</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-icon">📊</div>
+      <div class="ov-card-title">What Makes Ours Different</div>
+      <div class="ov-card-desc">Real-time delivery (under 60 seconds vs. competitors' daily CSVs), AI quality scoring on every lead, weekly automated reports to clients, full fraud detection. We charge the same or less and deliver a significantly better product.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════ CH 2 — HOW LEADS FLOW ══════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-num">Chapter 02</div>
+  <div class="chapter-title">How a Lead Flows</div>
+  <div class="chapter-desc">From the moment a consumer submits a form to the moment the client's phone rings — here is every step the system takes automatically, without any human involvement from us.</div>
+</div>
+<div class="doc-page" style="padding-top:1.5rem;">
+
+  <div class="flow-steps">
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot" style="background:#3b82f6;">1</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="flow-tag t-blue">Consumer Action</span>
+        <div class="flow-content-title">Consumer Sees Our Ad and Fills Out the Form</div>
+        <div class="flow-content-desc">A Google or Meta ad brings the consumer to our landing page. They fill in their name, phone, email, zip code, and describe what they need. They check a consent box and hit submit. Their IP address and the exact time are recorded automatically.</div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot" style="background:#16a34a;">2</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="flow-tag t-green">Intake Agent</span>
+        <div class="flow-content-title">System Validates the Lead</div>
+        <div class="flow-content-desc">Our automation immediately checks: Is this phone number real? Has this phone or email been submitted before in the last 30 days? Does this look like a bot (submission under 3 seconds)? If it passes all checks, it's saved to our database. If not — it's rejected and logged. The client never sees junk.</div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot" style="background:#7c3aed;">3</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="flow-tag t-purple">Qualify Agent</span>
+        <div class="flow-content-title">AI Scores the Lead 1–10</div>
+        <div class="flow-content-desc">Claude AI reads the consumer's message and assigns a quality score. A lead that says "my roof has been leaking for 2 weeks and I need it fixed before winter" scores a 9. A lead that just says "yes" scores a 2. This score goes with the lead so the client knows what they're getting before they call.</div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot" style="background:#d97706;">4</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="flow-tag t-amber">Route Agent</span>
+        <div class="flow-content-title">System Matches Lead to the Right Client</div>
+        <div class="flow-content-desc">The system checks our Clients database: which client serves roofing in Miami zip codes, has capacity left this month, and is currently active? It assigns the lead to the matching client. If it's an exclusive lead, only one client gets it. If shared, up to 4 clients are notified simultaneously.</div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot" style="background:#9333ea;">5</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="flow-tag t-purple">Deliver Agent</span>
+        <div class="flow-content-title">Lead Pushed to Client's CRM + Instant Alert Sent</div>
+        <div class="flow-content-desc">The lead's contact details are automatically sent to the client's CRM (GoHighLevel, HubSpot, Salesforce, or whatever they use) via a direct connection. Simultaneously, the client gets an SMS: "New lead — [Name], [Phone]. Score 8/10. Call now." And a full email with all details. Total time from form submit to client notification: under 60 seconds.</div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot" style="background:#f97316;">6</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="flow-tag t-orange">Follow-Up Agent</span>
+        <div class="flow-content-title">System Monitors Whether Client Responds</div>
+        <div class="flow-content-desc">If the client hasn't called the lead within 4 hours, they get an automatic reminder. Another at 24 hours. If they still haven't responded at 48 hours, we re-route the lead to a backup client so it doesn't go to waste — and we flag this client as unresponsive in our system.</div>
+      </div>
+    </div>
+
+    <div class="flow-step">
+      <div class="flow-line">
+        <div class="flow-dot" style="background:#0891b2;">7</div>
+        <div class="flow-connector"></div>
+      </div>
+      <div class="flow-content">
+        <span class="flow-tag t-cyan">Report + Billing</span>
+        <div class="flow-content-title">Weekly Reports Sent, Monthly Invoices Generated</div>
+        <div class="flow-content-desc">Every Monday at 8AM, each client automatically receives a report showing their leads, scores, and contact rates. We receive an internal report across all clients. On the 1st of each month, invoices are automatically generated and sent via Stripe. We don't touch any of this manually.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-green" style="margin-top:1rem;">
+    <span class="callout-icon">✅</span>
+    <p><strong>The key point for Sam:</strong> Once built, this entire process runs without us. A lead comes in at 3AM on a Sunday — it gets validated, scored, routed, delivered, and the client is alerted before 3:01AM. We build it once, it runs forever.</p>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════ CH 3 — THE 10 AGENTS ══════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-num">Chapter 03</div>
+  <div class="chapter-title">The 10 Automated Agents</div>
+  <div class="chapter-desc">The system is made up of 10 specialized agents — each one handles a specific job. They run in sequence, pass information between each other, and loop back when something needs to be fixed. Together they replace what would normally require a full operations team.</div>
+</div>
+<div class="doc-page" style="padding-top:1.5rem;">
+
+  <div class="agent-grid">
+
+    <div class="ag ag-green">
+      <span class="ag-icon">🔍</span>
+      <div class="ag-name">1. Intake Agent</div>
+      <span class="ag-trigger t-green">Fires: every form submit</span>
+      <ul class="ag-tasks">
+        <li>Checks phone number is real, not VoIP burner</li>
+        <li>Checks email isn't a throwaway domain</li>
+        <li>Detects duplicate submissions</li>
+        <li>Rejects bots based on form timing</li>
+        <li>Saves clean leads to Airtable database</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-blue">
+      <span class="ag-icon">🧠</span>
+      <div class="ag-name">2. Qualification Agent</div>
+      <span class="ag-trigger t-blue">Fires: new clean lead detected</span>
+      <ul class="ag-tasks">
+        <li>Sends lead's message to Claude AI</li>
+        <li>AI reads intent and assigns quality score 1–10</li>
+        <li>Tags the niche (roofing, HVAC, legal, etc.)</li>
+        <li>Flags high-value leads for priority routing</li>
+        <li>Saves score and reasoning to database</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-amber">
+      <span class="ag-icon">🗺️</span>
+      <div class="ag-name">3. Route Agent</div>
+      <span class="ag-trigger t-amber">Fires: lead is scored</span>
+      <ul class="ag-tasks">
+        <li>Matches lead to client by niche and zip</li>
+        <li>Checks client hasn't hit monthly cap</li>
+        <li>Enforces exclusive vs. shared rules</li>
+        <li>Holds unmatched leads in queue 7 days</li>
+        <li>Alerts us if no client matches</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-purple">
+      <span class="ag-icon">⚡</span>
+      <div class="ag-name">4. Delivery Agent</div>
+      <span class="ag-trigger t-purple">Fires: client assigned</span>
+      <ul class="ag-tasks">
+        <li>Pushes lead data to client's CRM via webhook</li>
+        <li>Sends instant SMS alert to client</li>
+        <li>Sends full email with all lead details</li>
+        <li>Retries up to 3 times if CRM is down</li>
+        <li>Logs every delivery attempt with result</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-orange">
+      <span class="ag-icon">⏰</span>
+      <div class="ag-name">5. Follow-Up Agent</div>
+      <span class="ag-trigger t-orange">Fires: every 4 hours</span>
+      <ul class="ag-tasks">
+        <li>Finds leads delivered with no client action</li>
+        <li>Sends reminder at 4hrs and 24hrs</li>
+        <li>Re-routes to backup client at 48hrs</li>
+        <li>Tracks each client's response rate</li>
+        <li>Flags unresponsive clients for us</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-cyan">
+      <span class="ag-icon">📊</span>
+      <div class="ag-name">6. Report Agent</div>
+      <span class="ag-trigger t-cyan">Fires: every Monday 8AM</span>
+      <ul class="ag-tasks">
+        <li>Pulls last 7 days of lead data per client</li>
+        <li>Generates client-facing report (their data only)</li>
+        <li>Generates our internal report (all clients)</li>
+        <li>Emails reports automatically — no manual work</li>
+        <li>Includes seasonal trend context per niche</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-rose">
+      <span class="ag-icon">💳</span>
+      <div class="ag-name">7. Billing Agent</div>
+      <span class="ag-trigger t-rose">Fires: 1st of each month</span>
+      <ul class="ag-tasks">
+        <li>Counts all delivered leads per client</li>
+        <li>Deducts approved bad-lead credits</li>
+        <li>Creates invoice in Stripe automatically</li>
+        <li>Sends invoice link to client via email</li>
+        <li>Flags unpaid invoices after 7 days</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-indigo">
+      <span class="ag-icon">🎛️</span>
+      <div class="ag-name">8. Management Agent</div>
+      <span class="ag-trigger t-indigo">Fires: when any agent has an issue</span>
+      <ul class="ag-tasks">
+        <li>Watches all other agents for errors</li>
+        <li>Decides what happens when things go wrong</li>
+        <li>Routes failures to retry queues</li>
+        <li>Sends us an SMS when our decision is needed</li>
+        <li>Ensures no lead ever falls through the cracks</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-teal">
+      <span class="ag-icon">🚦</span>
+      <div class="ag-name">9. Token Police Agent</div>
+      <span class="ag-trigger t-teal">Fires: every morning at 7AM</span>
+      <ul class="ag-tasks">
+        <li>Tracks daily AI (Claude) API spending</li>
+        <li>Tracks Make.com automation operation usage</li>
+        <li>Tracks Airtable record count</li>
+        <li>Switches to cheaper AI model if near budget</li>
+        <li>Alerts us before we hit any limits</li>
+      </ul>
+    </div>
+
+    <div class="ag ag-red">
+      <span class="ag-icon">🔴</span>
+      <div class="ag-name">10. Red Team Agent</div>
+      <span class="ag-trigger t-red">Fires: every night at midnight</span>
+      <ul class="ag-tasks">
+        <li>Audits all leads from the past 24 hours</li>
+        <li>Detects IP flooding and bot patterns</li>
+        <li>Cross-checks billing vs. delivery records</li>
+        <li>Flags any scoring anomalies</li>
+        <li>Emails us a nightly health report: ✅ or 🔴</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="sh">How Agents Hand Off to Each Other (Loopbacks)</div>
+  <table class="lb-table">
+    <tr><th>When This Happens</th><th>The System Does This</th></tr>
+    <tr><td class="lb-from">Lead fails intake validation</td><td class="lb-why">Rejected and logged. IP flagged. Red Team gets a copy for pattern analysis.</td></tr>
+    <tr><td class="lb-from">AI budget hits daily limit</td><td class="lb-why">Qualification switches to keyword-based scoring. Loop never stops.</td></tr>
+    <tr><td class="lb-from">No client matches the niche/zip</td><td class="lb-why">Lead held 7 days. We're alerted. If new client signs, lead is re-routed automatically.</td></tr>
+    <tr><td class="lb-from">Client CRM webhook fails delivery</td><td class="lb-why">Retry 3 times (2min, 10min, 1hr). If all fail, Management Agent texts us.</td></tr>
+    <tr><td class="lb-from">Client ignores lead for 48 hours</td><td class="lb-why">Lead re-routed to backup client. Original client's score drops.</td></tr>
+    <tr><td class="lb-from">Red Team finds anomaly batch</td><td class="lb-why">Those leads quarantined and re-run through strict intake validation.</td></tr>
+    <tr><td class="lb-from">Any unresolvable system state</td><td class="lb-why">Management Agent texts us with exactly what decision is needed. Loop pauses until we respond.</td></tr>
+  </table>
+
+</div>
+
+<!-- ══════════════════════════ CH 4 — RISKS + SOLUTIONS ══════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-num">Chapter 04</div>
+  <div class="chapter-title">Risks We've Identified and Solved</div>
+  <div class="chapter-desc">We researched what causes lead generation companies to fail, lose clients, get sued, or go out of business. Every vulnerability below has been addressed in how we've designed our system before we built a single line of automation.</div>
+</div>
+<div class="doc-page" style="padding-top:1.5rem;">
+
+  <div class="sh">Critical Risks — Business-Ending if Ignored</div>
+  <div class="vuln-list">
+
+    <div class="vuln vc no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">🤖</span>
+        <div class="vuln-title">Lead Farm Fraud — Fake Human Submissions</div>
+        <span class="vuln-sev">CRITICAL</span>
+      </div>
+      <div class="vuln-desc">Organized operations pay people $0.01 to fill out forms with real-looking but fake data. The person submitting has no interest in the service. The phone number exists but belongs to a stranger. Clients call confused strangers and demand refunds. Industry average: 36% of leads are fraudulent.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Carrier lookup (is this a VoIP burner?), email domain age check, form submission timing analysis. Our Intake Agent rejects these before they ever reach our database.
+      </div>
+    </div>
+
+    <div class="vuln vc no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">⚖️</span>
+        <div class="vuln-title">TCPA Violations — Calling Without Legal Consent</div>
+        <span class="vuln-sev">CRITICAL</span>
+      </div>
+      <div class="vuln-desc">The Telephone Consumer Protection Act requires documented written consent before businesses call or text using an auto-dialer. Most lead gen companies skip this. One class action lawsuit = $500,000+ average settlement. This is the #1 legal risk in the industry.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Every form has a clear, non-pre-checked consent checkbox with specific legal language. The exact consent text, timestamp, and IP are recorded in our database for every single lead. This is our legal proof if we're ever challenged.
+      </div>
+    </div>
+
+    <div class="vuln vc no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">♻️</span>
+        <div class="vuln-title">Aged Lead Reselling — Selling Stale Leads as Fresh</div>
+        <span class="vuln-sev">CRITICAL</span>
+      </div>
+      <div class="vuln-desc">A common industry scam: hold leads for 30–90 days, resell them as new. The consumer has long since solved their problem. Clients call people who have no idea what they're talking about. Destroys conversion rates and trust instantly.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Every lead delivered includes the exact timestamp it was created. Our system only delivers leads under 24 hours old. Leads in the unrouted queue expire after 7 days and are marked expired, not sold.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sh">High Severity Risks</div>
+  <div class="vuln-list">
+
+    <div class="vuln vh no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">⏱️</span>
+        <div class="vuln-title">Lead Latency — Slow Delivery Kills Conversion Rates</div>
+        <span class="vuln-sev">HIGH</span>
+      </div>
+      <div class="vuln-desc">Most lead gen companies deliver leads in a daily CSV email. By the time a client calls, the lead is 8–24 hours old. Studies show conversion drops 80% after 5 minutes and 90% after an hour. Clients blame lead quality — but it's a delivery problem.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Our Delivery Agent fires within seconds of a lead being validated. Client receives SMS + email and the lead appears in their CRM in under 60 seconds. This alone makes our leads 3–5x more valuable than competitors.
+      </div>
+    </div>
+
+    <div class="vuln vh no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">🎯</span>
+        <div class="vuln-title">Bad Lead Credit Abuse — Clients Gaming the Refund System</div>
+        <span class="vuln-sev">HIGH</span>
+      </div>
+      <div class="vuln-desc">Clients learn they can claim any lead as "bad" to get credits — even ones they successfully converted. Without tracking what happens to leads after delivery, there's no way to verify. Unchecked, this makes the business unprofitable.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Credits require submission within 72 hours of delivery with a call attempt log. Red Team Agent cross-checks: if a client's CRM shows they interacted with a lead, a "bad lead" claim on that lead is flagged immediately. Monthly credit rate tracked per client.
+      </div>
+    </div>
+
+    <div class="vuln vh no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">🔁</span>
+        <div class="vuln-title">Exclusive Lead Double-Selling</div>
+        <span class="vuln-sev">HIGH</span>
+      </div>
+      <div class="vuln-desc">Client pays a premium for exclusive leads — meaning only they get it. Without technical enforcement, the same lead accidentally (or deliberately) goes to multiple clients. When clients compare notes, trust is destroyed instantly.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Exclusivity is enforced technically, not by policy. Our Route Agent checks the pricing model and uses an atomic database write to prevent two clients from ever being assigned the same exclusive lead. Red Team audits this nightly.
+      </div>
+    </div>
+
+  </div>
+
+  <div class="sh">Legal Risks</div>
+  <div class="vuln-list">
+    <div class="vuln vl no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">🔒</span>
+        <div class="vuln-title">GDPR / CCPA — No Data Deletion Policy</div>
+        <span class="vuln-sev">LEGAL</span>
+      </div>
+      <div class="vuln-desc">Any consumer in California or the EU can legally request their data be deleted. Most lead gen companies have no process. CCPA fines are $100–$750 per consumer per incident. GDPR can fine up to 4% of global revenue.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Leads auto-archive after 90 days. A deletion request email triggers an automated workflow that removes the record from our database and logs the deletion. Privacy policy linked on every form page.
+      </div>
+    </div>
+    <div class="vuln vl no-break">
+      <div class="vuln-head">
+        <span class="vuln-icon">📋</span>
+        <div class="vuln-title">No Signed Client Contracts</div>
+        <span class="vuln-sev">LEGAL</span>
+      </div>
+      <div class="vuln-desc">Running on verbal agreements means no enforceable lead quality standards, no payment terms, no liability limits. When a client disputes and stops paying, you have nothing to stand on legally.</div>
+      <div class="vuln-fix">
+        <div class="vuln-fix-label">Our Solution</div>
+        Every client signs a standard agreement before their first lead is sent. It covers: lead quality definition, credit policy (72hr window, 15% max), payment terms (net 7), exclusivity definition, data handling, and limitation of liability.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════ CH 5 — TOOLS ══════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-num">Chapter 05</div>
+  <div class="chapter-title">The Tool Stack</div>
+  <div class="chapter-desc">Six tools run the entire operation. Every tool has a free tier sufficient to launch and validate the business. Costs only grow once revenue is flowing.</div>
+</div>
+<div class="doc-page" style="padding-top:1.5rem;">
+
+  <div class="tool-stack">
+    <div class="tool">
+      <div class="tool-name">Airtable</div>
+      <div class="tool-role">Our master lead database. Every lead, every client, every invoice lives here. The command center. Visual, filterable, shareable.</div>
+      <div class="tool-cost free">Free — up to 1,000 records</div>
+    </div>
+    <div class="tool">
+      <div class="tool-name">Make.com</div>
+      <div class="tool-role">The automation engine. Runs all 10 agents as automated scenarios. Connects every other tool together. The brain of the operation.</div>
+      <div class="tool-cost free">Free — 1,000 ops/month then $9/mo</div>
+    </div>
+    <div class="tool">
+      <div class="tool-name">Claude API</div>
+      <div class="tool-role">The AI that scores every lead 1–10 before delivery. Runs inside Make.com. No other lead gen company at our price point does this.</div>
+      <div class="tool-cost paid">~$5–20/month at scale</div>
+    </div>
+    <div class="tool">
+      <div class="tool-name">Twilio</div>
+      <div class="tool-role">Sends instant SMS alerts to clients when a lead arrives. Also used for our own internal alerts from the Management Agent.</div>
+      <div class="tool-cost paid">~$0.007/SMS — essentially free at start</div>
+    </div>
+    <div class="tool">
+      <div class="tool-name">Resend</div>
+      <div class="tool-role">Sends all emails — lead delivery emails, weekly reports to clients, invoice notifications. Professional email from our onkooz domain.</div>
+      <div class="tool-cost free">Free — 3,000 emails/month</div>
+    </div>
+    <div class="tool">
+      <div class="tool-name">Stripe</div>
+      <div class="tool-role">Client billing. Auto-generates and sends invoices on the 1st of each month. Clients pay online. Funds deposited to our bank account.</div>
+      <div class="tool-cost paid">2.9% + $0.30 per transaction only</div>
+    </div>
+  </div>
+
+  <div class="sh">Where Each Tool Fits in the Flow</div>
+  <div class="callout callout-blue">
+    <span class="callout-icon">🔗</span>
+    <p><strong>Landing Page</strong> (form submitted) → <strong>Make.com</strong> (automation triggers) → <strong>Claude API</strong> (lead scored) → <strong>Airtable</strong> (data stored) → <strong>Make.com</strong> (routes and delivers) → <strong>Twilio</strong> (client SMS) + <strong>Resend</strong> (client email) → <strong>Client's CRM</strong> (lead appears in their system) → <strong>Stripe</strong> (billing on the 1st)</p>
+  </div>
+
+  <div class="sh">Total Monthly Cost at Launch</div>
+  <table class="schema-table">
+    <tr><th>Tool</th><th>Cost</th><th>Covers</th></tr>
+    <tr><td class="fname">Airtable</td><td><span style="color:var(--green);font-weight:700;">$0</span></td><td class="fnote">Up to 1,000 lead records</td></tr>
+    <tr><td class="fname">Make.com</td><td><span style="color:var(--green);font-weight:700;">$0</span></td><td class="fnote">Up to ~65 full leads/month, then $9/mo for 10,000 ops</td></tr>
+    <tr><td class="fname">Claude API</td><td><span style="color:var(--green);font-weight:700;">~$2–5</span></td><td class="fnote">Scoring ~200 leads/month on Haiku model</td></tr>
+    <tr><td class="fname">Twilio</td><td><span style="color:var(--green);font-weight:700;">~$2–5</span></td><td class="fnote">~500 SMS messages</td></tr>
+    <tr><td class="fname">Resend</td><td><span style="color:var(--green);font-weight:700;">$0</span></td><td class="fnote">Up to 3,000 emails/month free</td></tr>
+    <tr><td class="fname">Stripe</td><td><span style="color:var(--green);font-weight:700;">$0 fixed</span></td><td class="fnote">2.9% taken from payments received only</td></tr>
+    <tr><td style="font-weight:800;">Total</td><td style="font-weight:800;color:var(--green);">~$5–10/mo</td><td class="fnote">To start. Scales with revenue.</td></tr>
+  </table>
+
+</div>
+
+<!-- ══════════════════════════ CH 6 — BUILD PLAN ══════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-num">Chapter 06</div>
+  <div class="chapter-title">The Build Plan</div>
+  <div class="chapter-desc">Seven phases to get from zero to first lead delivered. Working part-time alongside other projects, this is achievable in approximately two weeks. Phase 1 can start today.</div>
+</div>
+<div class="doc-page" style="padding-top:1.5rem;">
+
+  <div class="sh" style="margin-top:0;">Phase 1 — Airtable Database (Day 1–2)</div>
+  <div class="build-step"><div class="bs-num" style="background:#d97706;">1</div><div class="bs-body"><div class="bs-title">Create Airtable account at airtable.com</div><div class="bs-desc">Sign up free with onkooz email. Create a new Base called onkooz-leads.</div><div class="bs-time">⏱ 5 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#d97706;">2</div><div class="bs-body"><div class="bs-title">Build the Leads table with 17 fields</div><div class="bs-desc">full_name, email, phone, zip_code, message, source, quality_score, status (New/Validated/Scored/Routed/Delivered/Contacted/Closed/Lost/Rejected), assigned_client, billing_id, delivered_at, followup_count, ip_address, consent_timestamp, archived, escalated, escalation_reason.</div><div class="bs-time">⏱ 20 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#d97706;">3</div><div class="bs-body"><div class="bs-title">Build the Clients table with 15 fields</div><div class="bs-desc">business_name, contact_name, email, phone, niche, service_zips, crm_type, webhook_url, monthly_lead_cap, pricing_model, price_per_lead, status, stripe_customer_id, response_rate, joined_date. Add your first test client manually.</div><div class="bs-time">⏱ 20 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#d97706;">4</div><div class="bs-body"><div class="bs-title">Create 4 more tables</div><div class="bs-desc">Delivery Log (tracks every delivery attempt), Billing (invoice records), Token Usage (AI cost tracking), Audit Log (Red Team findings).</div><div class="bs-time">⏱ 25 minutes</div></div></div>
+
+  <div class="sh">Phase 2 — Lead Capture Page (Day 2–3)</div>
+  <div class="callout callout-amber">
+    <span class="callout-icon">📋</span>
+    <p><strong>Note:</strong> We are not using Framer for this project. The lead capture page will be built as a standalone HTML page or using a dedicated landing page tool such as Carrd or Unbounce — separate from the main onkooz website.</p>
+  </div>
+  <div class="build-step"><div class="bs-num" style="background:#3b82f6;">5</div><div class="bs-body"><div class="bs-title">Build a simple lead capture landing page</div><div class="bs-desc">One page, one goal. Fields: Name, Phone, Email, Zip Code, "What do you need?" text area. A non-pre-checked TCPA consent checkbox with the required legal language. A submit button.</div><div class="bs-time">⏱ 1–2 hours</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#3b82f6;">6</div><div class="bs-body"><div class="bs-title">Create a Thank You page</div><div class="bs-desc">After submit: "Thanks — a local specialist will contact you within 24 hours." Builds trust and reduces bounce. Redirect form to this page on success.</div><div class="bs-time">⏱ 15 minutes</div></div></div>
+
+  <div class="sh">Phase 3 — Make.com Automation (Day 3–7)</div>
+  <div class="build-step"><div class="bs-num" style="background:#7c3aed;">7</div><div class="bs-body"><div class="bs-title">Create Make.com account at make.com</div><div class="bs-desc">Sign up free. Connect Make.com to your Airtable base — this is a 2-click process inside Make.com's Connections menu.</div><div class="bs-time">⏱ 10 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#7c3aed;">8</div><div class="bs-body"><div class="bs-title">Build Scenario 1 — Intake Agent</div><div class="bs-desc">Trigger: form submits to Make.com webhook → duplicate check → save clean lead to Airtable with status "New". Paste the webhook URL into your landing page form's submit action.</div><div class="bs-time">⏱ 30 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#7c3aed;">9</div><div class="bs-body"><div class="bs-title">Build Scenario 2 — Qualify + Route Agent</div><div class="bs-desc">Trigger: new lead in Airtable → call Claude API to score the lead → search Clients table for matching niche and zip → assign client → update lead status to "Routed".</div><div class="bs-time">⏱ 45 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#7c3aed;">10</div><div class="bs-body"><div class="bs-title">Build Scenario 3 — Delivery Agent</div><div class="bs-desc">Trigger: lead status = Routed → POST to client's CRM webhook → SMS via Twilio → email via Resend → update lead status to "Delivered" with timestamp. Enable 3-retry on error.</div><div class="bs-time">⏱ 30 minutes</div></div></div>
+
+  <div class="sh">Phase 4 — Communication Setup (Day 5–6)</div>
+  <div class="build-step"><div class="bs-num" style="background:#16a34a;">11</div><div class="bs-body"><div class="bs-title">Create Twilio account at twilio.com</div><div class="bs-desc">Free trial gives $15 credit (~2,000 SMS). Get a US phone number. Copy Account SID and Auth Token into Make.com's Twilio connection.</div><div class="bs-time">⏱ 15 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#16a34a;">12</div><div class="bs-body"><div class="bs-title">Create Resend account at resend.com</div><div class="bs-desc">Connect your domain (onkooz.com) so emails come from leads@onkooz.com. Copy API key into Make.com.</div><div class="bs-time">⏱ 20 minutes</div></div></div>
+
+  <div class="sh">Phase 5 — Follow-Up + Reports (Day 7–9)</div>
+  <div class="build-step"><div class="bs-num" style="background:#0891b2;">13</div><div class="bs-body"><div class="bs-title">Build Scenario 4 — Follow-Up Agent</div><div class="bs-desc">Trigger: runs every 4 hours → finds delivered leads with no client response → SMS reminder → max 2 reminders → re-route at 48hrs.</div><div class="bs-time">⏱ 25 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#0891b2;">14</div><div class="bs-body"><div class="bs-title">Build Scenario 5 — Report Agent</div><div class="bs-desc">Trigger: every Monday 8AM → pull last 7 days per client → email client their report → email us internal report across all clients.</div><div class="bs-time">⏱ 40 minutes</div></div></div>
+
+  <div class="sh">Phase 6 — Billing (Day 9–11)</div>
+  <div class="build-step"><div class="bs-num" style="background:#dc2626;">15</div><div class="bs-body"><div class="bs-title">Create Stripe account at stripe.com</div><div class="bs-desc">Complete business verification (1–2 days). Add bank account for payouts. Create a Customer record in Stripe for each client and paste their Customer ID into Airtable.</div><div class="bs-time">⏱ 30 minutes + 2 days verification</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#dc2626;">16</div><div class="bs-body"><div class="bs-title">Build Scenario 6 — Billing Agent</div><div class="bs-desc">Trigger: 1st of month 9AM → count delivered leads per client → subtract credits → create Stripe invoice → send to client → log in Airtable Billing table.</div><div class="bs-time">⏱ 30 minutes</div></div></div>
+
+  <div class="sh">Phase 7 — Safety Agents (Day 11–14)</div>
+  <div class="build-step"><div class="bs-num" style="background:#7c3aed;">17</div><div class="bs-body"><div class="bs-title">Build Scenario 7 — Token Police Agent</div><div class="bs-desc">Trigger: every morning 7AM → check AI spend vs. $2 daily limit and Make.com ops vs. monthly limit → SMS alert if approaching limits → switch AI model if needed.</div><div class="bs-time">⏱ 20 minutes</div></div></div>
+  <div class="build-step"><div class="bs-num" style="background:#7c3aed;">18</div><div class="bs-body"><div class="bs-title">Build Scenario 8 — Red Team Agent</div><div class="bs-desc">Trigger: midnight daily → check for IP flooding → cross-check billing vs. delivery counts → email nightly audit report: ✅ clean or 🔴 issues found with details.</div><div class="bs-time">⏱ 30 minutes</div></div></div>
+
+  <div class="summary-box">
+    <h3>Pre-Launch Checklist</h3>
+    <div class="sum-grid">
+      <div class="sum-item"><div class="sum-label">Step 1</div><div class="sum-val" style="color:#4ade80;font-size:.85rem;">Airtable</div><div class="sum-note">All 5 tables built and test client added</div></div>
+      <div class="sum-item"><div class="sum-label">Step 2</div><div class="sum-val" style="color:#60a5fa;font-size:.85rem;">Landing Page</div><div class="sum-note">Live with TCPA consent checkbox</div></div>
+      <div class="sum-item"><div class="sum-label">Step 3</div><div class="sum-val" style="color:#c084fc;font-size:.85rem;">Make.com</div><div class="sum-note">All 8 scenarios built and active</div></div>
+      <div class="sum-item"><div class="sum-label">Step 4</div><div class="sum-val" style="color:#4ade80;font-size:.85rem;">Test Lead</div><div class="sum-note">Submitted → arrived in Airtable</div></div>
+      <div class="sum-item"><div class="sum-label">Step 5</div><div class="sum-val" style="color:#4ade80;font-size:.85rem;">Delivery</div><div class="sum-note">Test lead hit client CRM + SMS received</div></div>
+      <div class="sum-item"><div class="sum-label">Step 6</div><div class="sum-val" style="color:#4ade80;font-size:.85rem;">Reports</div><div class="sum-note">Monday report arrives in inbox</div></div>
+      <div class="sum-item"><div class="sum-label">Step 7</div><div class="sum-val" style="color:#fb7185;font-size:.85rem;">Stripe</div><div class="sum-note">Test invoice generated successfully</div></div>
+      <div class="sum-item"><div class="sum-label">Step 8</div><div class="sum-val" style="color:#f87171;font-size:.85rem;">Audit</div><div class="sum-note">Nightly audit report arriving clean ✅</div></div>
+      <div class="sum-item"><div class="sum-label">Step 9</div><div class="sum-val" style="color:#fbbf24;font-size:.85rem;">Contract</div><div class="sum-note">Client agreement signed before going live</div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════════════ CH 7 — NEXT STEPS ══════════════════════════ -->
+<div class="chapter">
+  <div class="chapter-num">Chapter 07</div>
+  <div class="chapter-title">Where We Start</div>
+  <div class="chapter-desc">The most important decision before building anything is picking the right niche and territory to start with. Everything else follows from that choice.</div>
+</div>
+<div class="doc-page" style="padding-top:1.5rem;">
+
+  <div class="sh">The Right Starting Point</div>
+  <div class="overview-grid">
+    <div class="ov-card">
+      <div class="ov-card-icon">1️⃣</div>
+      <div class="ov-card-title">Pick One Niche</div>
+      <div class="ov-card-desc">Start with a single high-value niche — Roofing is ideal. High average job value ($5,000–$15,000), strong demand year-round in warm climates, high lead prices ($50–$100), and business owners who understand the value of quality leads.</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-icon">2️⃣</div>
+      <div class="ov-card-title">Pick One Territory</div>
+      <div class="ov-card-desc">One city or metro to start. Miami, Tampa, Houston, Phoenix, Dallas — all strong markets for home services. Easier to dominate one market than be spread thin across many. Proves the model before scaling geographically.</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-icon">3️⃣</div>
+      <div class="ov-card-title">Sign First Client Before First Ad</div>
+      <div class="ov-card-desc">Reach out to 5–10 roofing companies in your chosen city. Offer a trial batch of 10 leads at a discounted rate. Having a signed buyer before you spend on ads means every lead you generate has a home to go to.</div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-icon">4️⃣</div>
+      <div class="ov-card-title">Build the System, Then Run Ads</div>
+      <div class="ov-card-desc">Complete all 7 build phases first. Test with a fake lead end-to-end. Only turn on paid traffic once every piece of the automation is confirmed working. Spending ad budget before the system is ready = leads that can't be delivered.</div>
+    </div>
+  </div>
+
+  <div class="sh">Revenue Projection — Conservative</div>
+  <table class="schema-table">
+    <tr><th>Month</th><th>Clients</th><th>Leads/Client/Mo</th><th>Price/Lead</th><th>Gross Revenue</th></tr>
+    <tr><td>Month 1</td><td class="fnote">2</td><td class="fnote">20</td><td class="fnote">$50</td><td style="font-weight:700;color:var(--green);">$2,000</td></tr>
+    <tr><td>Month 2</td><td class="fnote">4</td><td class="fnote">25</td><td class="fnote">$55</td><td style="font-weight:700;color:var(--green);">$5,500</td></tr>
+    <tr><td>Month 3</td><td class="fnote">6</td><td class="fnote">30</td><td class="fnote">$60</td><td style="font-weight:700;color:var(--green);">$10,800</td></tr>
+    <tr><td>Month 6</td><td class="fnote">10</td><td class="fnote">40</td><td class="fnote">$65</td><td style="font-weight:700;color:var(--green);">$26,000</td></tr>
+  </table>
+  <div class="callout callout-blue" style="margin-top:.85rem;">
+    <span class="callout-icon">📈</span>
+    <p>Ad spend is not included above. Typical cost per lead acquisition through Google Search for roofing is $8–$20. At $50 revenue per lead and $15 acquisition cost, gross margin is approximately 70%. The automation system eliminates virtually all labor cost.</p>
+  </div>
+
+  <div class="sh">Immediate Next Steps</div>
+  <div class="build-step"><div class="bs-num">1</div><div class="bs-body"><div class="bs-title">Decide on niche and starting city — this week</div><div class="bs-desc">Align on which market to target first. Roofing + one major city is the recommendation.</div></div></div>
+  <div class="build-step"><div class="bs-num">2</div><div class="bs-body"><div class="bs-title">Create Airtable account — this week</div><div class="bs-desc">Takes 1 hour. The schema is fully designed. Go to airtable.com and build the 5 tables using the field lists in Chapter 6.</div></div></div>
+  <div class="build-step"><div class="bs-num">3</div><div class="bs-body"><div class="bs-title">Reach out to 10 businesses in the target city — this week</div><div class="bs-desc">Before building anything else. Find 10 roofing companies on Google in your chosen city. Call or email offering a trial of 10 leads. You need a buyer confirmed before spending on ads.</div></div></div>
+  <div class="build-step"><div class="bs-num">4</div><div class="bs-body"><div class="bs-title">Get a client contract template ready</div><div class="bs-desc">Use a standard B2B service agreement. Key terms: lead quality definition, 72hr credit window, 15% max credits, net-7 payment, exclusivity definition. Sign before first lead is delivered.</div></div></div>
+
+  <div class="summary-box">
+    <h3>The Short Version for Sam</h3>
+    <div style="font-size:.78rem;color:#888;line-height:1.9;max-width:640px;">
+      We capture leads from people who need local services (roofing, HVAC, legal, etc.) using targeted ads. We score each lead with AI, then automatically send it to the right business client within 60 seconds — directly into their CRM with an SMS alert. The client pays us per lead. The entire system runs itself: intake, scoring, routing, delivery, follow-up reminders, weekly reports, and monthly invoicing are all automated. We built 12 security measures into the design based on how lead gen companies typically get burned — fraud, lawsuits, bad credits, delivery failures. <strong style="color:#fff;">Total startup cost: $0–$10/month. Time to build: ~2 weeks. Once running, it requires minimal daily involvement from us.</strong>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Ensure print button triggers proper PDF save
+  document.querySelector('.print-btn').addEventListener('click', function() {
+    window.print();
+  });
+</script>
+
+</body>
+</html>
