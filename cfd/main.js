@@ -1,219 +1,210 @@
-import { LBMSolver } from './lbm.js';
-import { DrawingTool } from './drawing.js';
-import { Streamlines } from './streamlines.js';
+import { LBMSolver }      from './lbm.js';
+import { DrawingTool }     from './drawing.js';
+import { Streamlines }     from './streamlines.js';
+import { ForceCalculator } from './forces.js';
+import { PRESETS, formatRe, lbmRe } from './presets.js';
+import { importFile, drawShape } from './obj-import.js';
 
-// ── Grid dimensions ──────────────────────────────────────────────────
-const GRID_W = 512;
-const GRID_H = 256;
+const GRID_W = 512, GRID_H = 256;
 
-// ── DOM refs ─────────────────────────────────────────────────────────
+// ── DOM ──────────────────────────────────────────────────────────────
 const simCanvas    = document.getElementById('sim-canvas');
 const streamCanvas = document.getElementById('stream-canvas');
 const handleCanvas = document.getElementById('handle-canvas');
 const drawCanvas   = document.getElementById('draw-canvas');
-// draw-canvas sits on top and receives pointer events; sim-canvas is WebGL output
+const canvasWrap   = document.getElementById('canvas-wrap');
 const tooltip      = document.getElementById('tooltip');
-const canvasWrap   = document.querySelector('.canvas-wrap');
 
-const elFPS    = document.getElementById('fps');
-const elStep   = document.getElementById('step');
-const elRe     = document.getElementById('re');
-const elOmega  = document.getElementById('val-omega');
-const elU0     = document.getElementById('val-u0');
-const elBrush  = document.getElementById('val-brush');
-const elSmooth = document.getElementById('val-smooth');
-const elAngle  = document.getElementById('val-angle');
-const elScale  = document.getElementById('val-scale');
+// ── WebGL2 ───────────────────────────────────────────────────────────
+const gl = simCanvas.getContext('webgl2', { antialias:false, preserveDrawingBuffer:true });
+if(!gl) { alert('WebGL2 not supported — please use Chrome, Firefox or Edge'); throw new Error(); }
 
-// ── WebGL2 setup ─────────────────────────────────────────────────────
-const gl = simCanvas.getContext('webgl2', {
-  antialias: false,
-  preserveDrawingBuffer: true
-});
-if(!gl) { alert('WebGL2 not supported'); throw new Error(); }
-
-// ── Solver init ──────────────────────────────────────────────────────
+// ── Solver ───────────────────────────────────────────────────────────
 let solver;
 try {
   solver = new LBMSolver(gl, GRID_W, GRID_H);
 } catch(e) {
-  document.body.innerHTML = `<div style="color:#f7768e;padding:32px;font-family:monospace">
-    <b>WebGL2 Error:</b><br>${e.message}</div>`;
+  document.body.innerHTML = `<div style="color:#f7768e;padding:32px;font-family:Arial">
+    <b>WebGL2 init failed:</b><br>${e.message}</div>`;
   throw e;
 }
 
-// ── Drawing tool ─────────────────────────────────────────────────────
-// Bind drawing to the canvas wrap div — covers the full tunnel area
-const draw = new DrawingTool(solver, canvasWrap, handleCanvas, tooltip);
-
-// ── Streamlines ──────────────────────────────────────────────────────
+// ── Drawing + Forces + Streamlines ───────────────────────────────────
+const draw   = new DrawingTool(solver, canvasWrap, handleCanvas, tooltip);
+const forces = new ForceCalculator(solver, gl);
 let streamlines;
 
-// ── Layout / resize ──────────────────────────────────────────────────
+// ── Layout ───────────────────────────────────────────────────────────
 function resize() {
-  const ww = canvasWrap.clientWidth;
-  const wh = canvasWrap.clientHeight;
-  // Maintain aspect ratio of grid
+  const ww = canvasWrap.clientWidth, wh = canvasWrap.clientHeight;
   const aspect = GRID_W / GRID_H;
   let cw = ww, ch = Math.floor(ww / aspect);
   if(ch > wh) { ch = wh; cw = Math.floor(wh * aspect); }
 
-  for(const c of [simCanvas, streamCanvas, handleCanvas, drawCanvas]) {
-    c.width  = cw;
-    c.height = ch;
-    c.style.width  = cw + 'px';
-    c.style.height = ch + 'px';
-  }
-  simCanvas.style.position = 'absolute';
-  simCanvas.style.left = Math.floor((ww-cw)/2)+'px';
-  simCanvas.style.top  = Math.floor((wh-ch)/2)+'px';
-  for(const c of [streamCanvas, handleCanvas, drawCanvas]) {
-    c.style.position = 'absolute';
-    c.style.left = simCanvas.style.left;
-    c.style.top  = simCanvas.style.top;
-  }
+  const lx = Math.floor((ww-cw)/2), ly = Math.floor((wh-ch)/2);
 
+  for(const c of [simCanvas, streamCanvas, handleCanvas, drawCanvas]) {
+    c.width = cw; c.height = ch;
+    c.style.width = cw+'px'; c.style.height = ch+'px';
+    c.style.left = lx+'px'; c.style.top = ly+'px';
+  }
   if(streamlines) streamlines.resize(cw, ch);
 }
 window.addEventListener('resize', resize);
 resize();
 
-// Init streamlines after resize sets canvas size
 streamlines = new Streamlines(solver, gl, streamCanvas);
 
-// ── Preset car shape: simple coupe silhouette ─────────────────────────
-function drawCarPreset() {
-  const W = GRID_W, H = GRID_H;
-  const cx = W*0.42, cy = H*0.42;
-  const carW = W*0.30, carH = H*0.16;
-  const r = 3;
+// ── Presets ───────────────────────────────────────────────────────────
+let currentPreset = 'custom';
 
-  // Roof (arch via ellipse top half)
-  const roofW = carW*0.52, roofH = carH*0.65;
-  const roofCx = cx + carW*0.04, roofCy = cy + carH*0.18;
-  const steps = 40;
-  let prev = null;
-  for(let i=0;i<=steps;i++){
-    const t = Math.PI + Math.PI*(i/steps); // top half
-    const x = roofCx + roofW*Math.cos(t);
-    const y = roofCy + roofH*Math.sin(t);
-    if(prev) solver.paintLine(prev.x,prev.y,x,y,r,true);
-    prev={x,y};
-  }
+function applyPreset(key) {
+  const p = PRESETS[key];
+  if(!p) return;
+  currentPreset = key;
 
-  // Bottom (flat floor)
-  const floorY = cy - carH*0.45;
-  const bodyL = cx - carW*0.48;
-  const bodyR = cx + carW*0.48;
-  solver.paintLine(bodyL, floorY, bodyR, floorY, r, true);
+  // Update solver params
+  solver.u0    = p.u0;
+  solver.omega = p.omega;
+  solver.angle = p.angle * Math.PI/180;
 
-  // Front nose (angled)
-  solver.paintLine(bodyR, floorY, bodyR - carW*0.06, cy + carH*0.1, r, true);
-  // Front hood
-  solver.paintLine(bodyR - carW*0.06, cy + carH*0.1, roofCx+roofW, roofCy, r, true);
+  // Update sliders
+  document.getElementById('sl-u0').value    = p.u0;
+  document.getElementById('sl-omega').value = p.omega;
+  document.getElementById('sl-angle').value = p.angle;
+  document.getElementById('val-u0').textContent    = p.u0.toFixed(3);
+  document.getElementById('val-omega').textContent = p.omega.toFixed(2);
+  document.getElementById('val-angle').textContent = p.angle + '°';
 
-  // Rear
-  solver.paintLine(bodyL, floorY, bodyL + carW*0.02, cy + carH*0.05, r, true);
-  solver.paintLine(bodyL + carW*0.02, cy + carH*0.05, roofCx-roofW, roofCy, r, true);
+  // Update preset buttons
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-preset="${key}"]`)?.classList.add('active');
 
-  // Wheels (filled circles)
-  const wheelR = carH*0.22;
-  solver.paintObstacle(bodyL + carW*0.14, floorY - wheelR*0.1, wheelR, true);
-  solver.paintObstacle(bodyR - carW*0.14, floorY - wheelR*0.1, wheelR, true);
+  // Update badge + notes
+  document.getElementById('badge-preset').textContent = p.label.toUpperCase();
+  document.getElementById('preset-notes').textContent = p.notes;
 
-  // Spoiler
-  const spoilerX = bodyL + carW*0.04;
-  solver.paintLine(spoilerX, floorY+carH*0.04, spoilerX - carW*0.04, floorY+carH*0.28, r+1, true);
+  // Draw the shape
+  solver.clearObstacles();
+  if(p.shape) drawShape(p.shape, solver);
+  solver.reset();
+  forces.reset();
+  streamlines._spawnAll();
+  streamlines.clear();
+
+  drawAngleIndicator(p.angle);
+  updateRe();
+  updateRealRe(p);
 }
 
-// ── Tool button clicks ────────────────────────────────────────────────
-const toolBtns = document.querySelectorAll('.tool-btn[data-tool]');
-toolBtns.forEach(btn => {
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => applyPreset(btn.dataset.preset));
+});
+
+function updateRealRe(p) {
+  const el = document.getElementById('real-re');
+  el.textContent = p.realRe ? formatRe(p.realRe) : '—';
+}
+
+// ── Tool buttons ──────────────────────────────────────────────────────
+document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
   btn.addEventListener('click', () => {
-    toolBtns.forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    const t = btn.dataset.tool;
-    draw.setMode(t);
-    canvasWrap.className = 'canvas-wrap';
-    if(t==='freehand'||t==='line'||t==='rect'||t==='ellipse'||t==='bezier') canvasWrap.classList.add('drawing');
-    if(t==='erase') canvasWrap.classList.add('erasing');
+    draw.setMode(btn.dataset.tool);
   });
 });
 
-// Bezier commit/clear
 document.getElementById('btn-bez-commit')?.addEventListener('click', () => draw.commitBezier());
 document.getElementById('btn-bez-clear')?.addEventListener('click',  () => draw.clearBezier());
 
-// ── Viz mode buttons ──────────────────────────────────────────────────
-const vizBtns = document.querySelectorAll('.viz-btn[data-viz]');
-vizBtns.forEach(btn => {
+// ── Viz buttons ───────────────────────────────────────────────────────
+document.querySelectorAll('.viz-btn[data-viz]').forEach(btn => {
   btn.addEventListener('click', () => {
-    vizBtns.forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.viz-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     solver.vizMode = parseInt(btn.dataset.viz);
     updateLegend(solver.vizMode);
   });
 });
 
-// ── Action buttons ────────────────────────────────────────────────────
-document.getElementById('btn-reset').addEventListener('click', () => {
-  solver.reset();
-  streamlines._spawnAll();
-  streamlines.clear();
+// ── File import ───────────────────────────────────────────────────────
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const importStatus = document.getElementById('import-status');
+let importAxis = 'xz';
+
+document.querySelectorAll('.axis-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.axis-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    importAxis = btn.dataset.axis;
+  });
 });
 
-document.getElementById('btn-clear-obs').addEventListener('click', () => {
-  solver.clearObstacles();
-  solver.reset();
-  streamlines._spawnAll();
-  streamlines.clear();
+dropZone.addEventListener('click', () => fileInput.click());
+fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  handleFile(e.dataTransfer.files[0]);
 });
 
-document.getElementById('btn-preset-car').addEventListener('click', () => {
-  solver.clearObstacles();
-  solver.reset();
-  drawCarPreset();
-});
-
-document.getElementById('btn-export').addEventListener('click', () => {
-  const url = simCanvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  a.href=url; a.download='cfd-frame.png'; a.click();
-});
+async function handleFile(file) {
+  if(!file) return;
+  importStatus.className = 'import-status';
+  importStatus.textContent = `Loading ${file.name}…`;
+  try {
+    solver.clearObstacles();
+    solver.reset();
+    const count = await importFile(file, solver, importAxis);
+    importStatus.textContent = `✓ Imported ${count} triangles`;
+    forces.reset();
+    streamlines._spawnAll();
+    streamlines.clear();
+    applyPreset('custom');
+  } catch(e) {
+    importStatus.className = 'import-status error';
+    importStatus.textContent = `✗ ${e.message}`;
+  }
+}
 
 // ── Sliders ───────────────────────────────────────────────────────────
 document.getElementById('sl-omega').addEventListener('input', function(){
   solver.omega = parseFloat(this.value);
-  elOmega.textContent = solver.omega.toFixed(2);
+  document.getElementById('val-omega').textContent = solver.omega.toFixed(2);
   updateRe();
 });
 
 document.getElementById('sl-u0').addEventListener('input', function(){
   solver.u0 = parseFloat(this.value);
-  elU0.textContent = solver.u0.toFixed(3);
+  document.getElementById('val-u0').textContent = solver.u0.toFixed(3);
   updateRe();
 });
 
 document.getElementById('sl-brush').addEventListener('input', function(){
   draw.brushRadius = parseInt(this.value);
-  elBrush.textContent = draw.brushRadius;
+  document.getElementById('val-brush').textContent = draw.brushRadius;
 });
 
 document.getElementById('sl-smooth').addEventListener('input', function(){
   draw.smoothing = parseFloat(this.value);
-  elSmooth.textContent = draw.smoothing.toFixed(1);
+  document.getElementById('val-smooth').textContent = draw.smoothing.toFixed(1);
 });
 
 document.getElementById('sl-angle').addEventListener('input', function(){
   solver.angle = parseFloat(this.value) * Math.PI/180;
-  elAngle.textContent = this.value + '°';
+  document.getElementById('val-angle').textContent = this.value+'°';
   solver.reset();
   drawAngleIndicator(parseFloat(this.value));
 });
 
 document.getElementById('sl-scale').addEventListener('input', function(){
   solver.vizScale = parseFloat(this.value);
-  elScale.textContent = parseFloat(this.value).toFixed(2);
+  document.getElementById('val-scale').textContent = parseFloat(this.value).toFixed(2);
 });
 
 document.getElementById('sl-particles').addEventListener('input', function(){
@@ -226,86 +217,107 @@ document.getElementById('chk-streamlines').addEventListener('change', function()
   if(!this.checked) streamlines.clear();
 });
 
-function updateRe() {
-  const tau = 1/solver.omega;
-  const nu  = (tau - 0.5) / 3;
-  const Re  = Math.round(solver.u0 * GRID_H / nu);
-  elRe.textContent = Re;
-}
-updateRe();
+// ── Action buttons ────────────────────────────────────────────────────
+document.getElementById('btn-reset').addEventListener('click', () => {
+  solver.reset(); forces.reset();
+  streamlines._spawnAll(); streamlines.clear();
+});
 
-// ── Angle indicator ────────────────────────────────────────────────────
-const angleCtx = document.getElementById('angle-canvas').getContext('2d');
-function drawAngleIndicator(deg) {
-  const c = angleCtx;
-  const r = 28;
-  c.clearRect(0,0,60,60);
-  c.strokeStyle = '#1e1e2e';
-  c.lineWidth = 2;
-  c.beginPath(); c.arc(30,30,r,0,2*Math.PI); c.stroke();
-  const a = -deg * Math.PI/180;
-  c.strokeStyle = '#7aa2f7';
-  c.lineWidth = 2;
-  c.beginPath(); c.moveTo(30,30);
-  c.lineTo(30 + r*Math.cos(a), 30 + r*Math.sin(a)); c.stroke();
-  // label
-  c.fillStyle='#7aa2f7';
-  c.font='8px monospace';
-  c.textAlign='center';
-  c.fillText(deg+'°', 30, 30+r+10);
-}
-drawAngleIndicator(0);
+document.getElementById('btn-clear-obs').addEventListener('click', () => {
+  solver.clearObstacles(); solver.reset(); forces.reset();
+  streamlines._spawnAll(); streamlines.clear();
+});
 
-// ── Legend ────────────────────────────────────────────────────────────
-function updateLegend(mode) {
-  const bar = document.getElementById('legend-bar');
-  const minL = document.getElementById('legend-min');
-  const maxL = document.getElementById('legend-max');
-  const modeL = document.getElementById('legend-mode');
-  const maps = {
-    0: { label:'Speed',    min:'0', max:'u_max', grad:'linear-gradient(to right,#050384,#c03d74,#f0f421)' },
-    1: { label:'Pressure', min:'low', max:'high', grad:'linear-gradient(to right,#042db6,#ddd,#c21904)' },
-    2: { label:'Vorticity',min:'−',  max:'+',   grad:'linear-gradient(to right,#042db6,#ddd,#c21904)' },
-    3: { label:'Ux',       min:'0', max:'u_max', grad:'linear-gradient(to right,#270c52,#1e8f82,#faed24)' },
-  };
-  const m = maps[mode];
-  bar.style.background = m.grad;
-  minL.textContent = m.min;
-  maxL.textContent = m.max;
-  modeL.textContent = m.label;
-}
-updateLegend(0);
-
-// ── Main loop ─────────────────────────────────────────────────────────
-let frameCount=0, lastFPS=performance.now(), fps=0;
-let paused=false;
+let paused = false;
 document.getElementById('btn-pause').addEventListener('click', function(){
-  paused=!paused;
+  paused = !paused;
   this.textContent = paused ? '▶ Resume' : '⏸ Pause';
 });
 
+document.getElementById('btn-export').addEventListener('click', () => {
+  const a = document.createElement('a');
+  a.href = simCanvas.toDataURL('image/png');
+  a.download = `cfd-${currentPreset}-step${solver.step}.png`;
+  a.click();
+});
+
+// ── Stats helpers ─────────────────────────────────────────────────────
+function updateRe() {
+  const re = lbmRe(solver.u0, solver.omega, 80);
+  document.getElementById('re').textContent = re;
+}
+updateRe();
+
+function updateLegend(mode) {
+  const maps = {
+    0: { label:'Speed |u|',  min:'0',    max:'fast', grad:'linear-gradient(to right,#050384,#c03d74,#f0f421)' },
+    1: { label:'Pressure',   min:'low',  max:'high', grad:'linear-gradient(to right,#042db6,#ddd,#c21904)' },
+    2: { label:'Vorticity',  min:'−',    max:'+',    grad:'linear-gradient(to right,#042db6,#ddd,#c21904)' },
+    3: { label:'Ux stream',  min:'0',    max:'fast', grad:'linear-gradient(to right,#270c52,#1e8f82,#faed24)' },
+  };
+  const m = maps[mode];
+  document.getElementById('legend-bar').style.background = m.grad;
+  document.getElementById('legend-min').textContent  = m.min;
+  document.getElementById('legend-max').textContent  = m.max;
+  document.getElementById('legend-mode').textContent = m.label;
+}
+updateLegend(0);
+
+function updateForceDisplay() {
+  const cdEl = document.getElementById('val-cd');
+  const clEl = document.getElementById('val-cl');
+  const barD = document.getElementById('bar-drag');
+  const barL = document.getElementById('bar-lift');
+
+  const cd = forces.Cd, cl = forces.Cl;
+  cdEl.textContent = isFinite(cd) ? Math.abs(cd).toFixed(2) : '—';
+  clEl.textContent = isFinite(cl) ? cl.toFixed(2) : '—';
+  clEl.style.color = cl < 0 ? '#f7768e' : '#7aa2f7'; // red=downforce, blue=uplift
+
+  barD.style.width = Math.min(100, Math.abs(cd)*40) + '%';
+  barL.style.width = Math.min(100, Math.abs(cl)*30) + '%';
+}
+
+// ── Angle indicator ───────────────────────────────────────────────────
+const angleCtx = document.getElementById('angle-canvas').getContext('2d');
+function drawAngleIndicator(deg) {
+  angleCtx.clearRect(0,0,60,60);
+  angleCtx.strokeStyle = '#1e1e2e'; angleCtx.lineWidth = 2;
+  angleCtx.beginPath(); angleCtx.arc(30,30,26,0,2*Math.PI); angleCtx.stroke();
+  const a = -deg * Math.PI/180;
+  angleCtx.strokeStyle = '#7aa2f7'; angleCtx.lineWidth = 2;
+  angleCtx.beginPath(); angleCtx.moveTo(30,30);
+  angleCtx.lineTo(30+26*Math.cos(a), 30+26*Math.sin(a)); angleCtx.stroke();
+  angleCtx.fillStyle='#7aa2f7'; angleCtx.font='8px Arial';
+  angleCtx.textAlign='center'; angleCtx.fillText(deg+'°',30,54);
+}
+drawAngleIndicator(0);
+
+// ── Main loop ─────────────────────────────────────────────────────────
+let frameCount=0, lastFPS=performance.now();
+simCanvas.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
+
+// Load GT3 preset on start
+applyPreset('gt3');
+
 function loop() {
   requestAnimationFrame(loop);
-  if(!paused){
+  if(!paused) {
     solver.simulate(4);
     solver.render(simCanvas.width, simCanvas.height);
+    forces.update(frameCount);
     streamlines.update(frameCount);
     streamlines.draw();
   }
 
   frameCount++;
   const now = performance.now();
-  if(now-lastFPS > 500){
-    fps = Math.round(frameCount*1000/(now-lastFPS));
-    frameCount=0; lastFPS=now;
-    elFPS.textContent  = fps;
-    elStep.textContent = solver.step;
+  if(now - lastFPS > 500) {
+    const fps = Math.round(frameCount*1000/(now-lastFPS));
+    frameCount = 0; lastFPS = now;
+    document.getElementById('fps').textContent  = fps;
+    document.getElementById('step').textContent = solver.step;
+    updateForceDisplay();
   }
 }
-
-// Hide tooltip when mouse leaves canvas area
-simCanvas.addEventListener('mouseleave', () => { tooltip.style.display='none'; });
-
-// Load preset on start
-drawCarPreset();
 loop();
