@@ -228,6 +228,14 @@ export class LBMSolver {
     gl.bindFramebuffer(gl.FRAMEBUFFER,null);
   }
 
+  // Render viz to a specific FBO (pass null for screen)
+  renderToFBO(fbo, targetW, targetH) {
+    const gl = this.gl;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    this.render(targetW, targetH);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
   render(targetW, targetH) {
     const gl = this.gl;
     gl.useProgram(this.progViz);

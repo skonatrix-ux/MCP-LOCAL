@@ -3,158 +3,154 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CFD Wind Tunnel — WebGL2 LBM</title>
+<title>AeroSim — CFD Wind Tunnel</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<header>
-  <h1>CFD WIND TUNNEL</h1>
-  <span class="badge">D2Q9 LBM</span>
-  <span class="badge">WebGL2</span>
-  <span class="badge live" id="badge-preset">CUSTOM</span>
-  <div id="stats">
-    FPS <span id="fps">—</span> &nbsp;|&nbsp;
-    Step <span id="step">0</span> &nbsp;|&nbsp;
-    Re <span id="re">—</span> &nbsp;|&nbsp;
-    Real Re <span id="real-re">—</span>
+<!-- ── Menu Bar ──────────────────────────────────────────────────────── -->
+<div id="menubar">
+  <div class="menu-logo">⬡ <span>AEROSIM</span></div>
+  <div class="menu-items">
+    <div class="menu-item" tabindex="0">File
+      <div class="menu-dropdown">
+        <div class="menu-action" id="btn-export">Export PNG</div>
+        <div class="menu-action" id="btn-export-data">Export CSV Data</div>
+      </div>
+    </div>
+    <div class="menu-item" tabindex="0">Simulation
+      <div class="menu-dropdown">
+        <div class="menu-action" id="btn-reset">Reset Flow</div>
+        <div class="menu-action" id="btn-refresh">Refresh Preset</div>
+        <div class="menu-action" id="btn-clear-obs">Clear Obstacles</div>
+      </div>
+    </div>
+    <div class="menu-item" tabindex="0">View
+      <div class="menu-dropdown">
+        <div class="menu-action" id="btn-view-persp">Perspective</div>
+        <div class="menu-action" id="btn-view-top">Top</div>
+        <div class="menu-action" id="btn-view-side">Side</div>
+        <div class="menu-action" id="btn-view-front">Front</div>
+        <hr class="menu-sep">
+        <div class="menu-action" id="btn-toggle-stream">Toggle Streamlines</div>
+        <div class="menu-action" id="btn-toggle-3d">Toggle 3D / 2D</div>
+      </div>
+    </div>
   </div>
-</header>
 
-<div class="main">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="tb-btn" id="btn-pause" title="Play/Pause (Space)">
+      <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="2" width="4" height="10" rx="1" fill="currentColor"/><rect x="8" y="2" width="4" height="10" rx="1" fill="currentColor"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-step" title="Step Once">
+      <svg width="14" height="14" viewBox="0 0 14 14"><polygon points="2,2 10,7 2,12" fill="currentColor"/><rect x="10" y="2" width="2" height="10" fill="currentColor"/></svg>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn active" data-tool="freehand" title="Draw (D)">
+      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 12 Q5 4 12 2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+    </button>
+    <button class="tb-btn" data-tool="line" title="Line (L)">
+      <svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="12" x2="12" y2="2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </button>
+    <button class="tb-btn" data-tool="rect" title="Rectangle (R)">
+      <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+    </button>
+    <button class="tb-btn" data-tool="ellipse" title="Ellipse (E)">
+      <svg width="14" height="14" viewBox="0 0 14 14"><ellipse cx="7" cy="7" rx="5" ry="3.5" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+    </button>
+    <button class="tb-btn" data-tool="bezier" title="Bézier (B)">
+      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 12 C4 2 10 2 12 12" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+    </button>
+    <button class="tb-btn" data-tool="erase" title="Erase (X)">
+      <svg width="14" height="14" viewBox="0 0 14 14"><path d="M3 11 L11 3 M8 2 L12 6 L5 13 L1 13 L1 9 Z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-bez-commit" title="Commit Bézier">✓</button>
+    <button class="tb-btn" id="btn-bez-clear" title="Clear Bézier">✕</button>
+    <div class="tb-sep"></div>
+    <!-- Viz mode -->
+    <button class="tb-btn viz active" data-viz="0" title="Speed">SPD</button>
+    <button class="tb-btn viz" data-viz="1" title="Pressure">PRE</button>
+    <button class="tb-btn viz" data-viz="2" title="Vorticity">VOR</button>
+    <button class="tb-btn viz" data-viz="3" title="Ux">UX</button>
+    <div class="tb-sep"></div>
+    <!-- View preset btns -->
+    <button class="tb-btn" id="tb-view-persp" title="Perspective">⟁</button>
+    <button class="tb-btn" id="tb-view-top"   title="Top View">⬜</button>
+    <button class="tb-btn" id="tb-view-side"  title="Side View">◧</button>
+  </div>
 
-  <!-- ── Left Sidebar ──────────────────────────────────── -->
-  <aside class="sidebar">
+  <div id="sim-status">
+    <span class="status-dot live" id="status-dot"></span>
+    <span id="status-text">RUNNING</span>
+    &nbsp;|&nbsp; FPS <b id="fps">—</b>
+    &nbsp;|&nbsp; Step <b id="step">0</b>
+    &nbsp;|&nbsp; Re <b id="re">—</b>
+    &nbsp;|&nbsp; Real Re <b id="real-re">—</b>
+  </div>
+</div>
 
-    <!-- Wind Tunnel Presets -->
-    <div class="section">
-      <div class="section-title">Wind Tunnel Preset</div>
+<!-- ── Main layout ────────────────────────────────────────────────────── -->
+<div class="workspace">
+
+  <!-- ── Left panel ──────────────────────── -->
+  <aside class="panel panel-left">
+
+    <!-- Presets -->
+    <div class="panel-section">
+      <div class="panel-title">WIND TUNNEL PRESET</div>
       <div class="preset-grid">
         <button class="preset-btn" data-preset="gt3">
-          <span class="preset-icon">🏎</span>
-          <span>GT3</span>
-          <span class="preset-speed">200 km/h</span>
+          <span>🏎</span><br>GT3<br><small>200 km/h</small>
         </button>
         <button class="preset-btn" data-preset="formula1">
-          <span class="preset-icon">🏁</span>
-          <span>Formula 1</span>
-          <span class="preset-speed">300 km/h</span>
+          <span>🏁</span><br>F1<br><small>300 km/h</small>
         </button>
         <button class="preset-btn" data-preset="aviation_cruise">
-          <span class="preset-icon">✈</span>
-          <span>Airliner</span>
-          <span class="preset-speed">900 km/h</span>
+          <span>✈</span><br>Cruise<br><small>900 km/h</small>
         </button>
         <button class="preset-btn" data-preset="aviation_landing">
-          <span class="preset-icon">🛬</span>
-          <span>Landing</span>
-          <span class="preset-speed">280 km/h</span>
+          <span>🛬</span><br>Land<br><small>280 km/h</small>
         </button>
         <button class="preset-btn" data-preset="general_aviation">
-          <span class="preset-icon">🛩</span>
-          <span>Light AC</span>
-          <span class="preset-speed">200 km/h</span>
+          <span>🛩</span><br>Light<br><small>200 km/h</small>
         </button>
         <button class="preset-btn" data-preset="custom">
-          <span class="preset-icon">✏</span>
-          <span>Custom</span>
-          <span class="preset-speed">manual</span>
+          <span>✏</span><br>Custom<br><small>manual</small>
         </button>
       </div>
-      <div id="preset-notes" class="preset-notes">Select a preset above</div>
+      <div id="preset-notes" class="preset-notes">Select a preset</div>
     </div>
 
-    <!-- Aerodynamic Forces -->
-    <div class="section">
-      <div class="section-title">Aerodynamic Forces</div>
-      <div class="force-grid">
-        <div class="force-card drag">
-          <div class="force-label">Drag Cd</div>
-          <div class="force-value" id="val-cd">—</div>
-        </div>
-        <div class="force-card lift">
-          <div class="force-label">Lift Cl</div>
-          <div class="force-value" id="val-cl">—</div>
-        </div>
+    <!-- Aerodynamics results -->
+    <div class="panel-section">
+      <div class="panel-title">AERODYNAMIC RESULTS</div>
+      <div class="result-row">
+        <span class="result-label">Drag Cd</span>
+        <span class="result-value drag" id="val-cd">—</span>
       </div>
-      <div class="force-bar-wrap">
-        <div class="force-bar-label">Drag</div>
-        <div class="force-bar-track"><div class="force-bar-fill drag-fill" id="bar-drag"></div></div>
+      <div class="result-row">
+        <span class="result-label">Lift Cl</span>
+        <span class="result-value lift" id="val-cl">—</span>
       </div>
-      <div class="force-bar-wrap">
-        <div class="force-bar-label">Lift</div>
-        <div class="force-bar-track"><div class="force-bar-fill lift-fill" id="bar-lift"></div></div>
+      <div class="result-row">
+        <span class="result-label">L/D Ratio</span>
+        <span class="result-value" id="val-ld">—</span>
       </div>
-    </div>
-
-    <!-- Drawing tools -->
-    <div class="section">
-      <div class="section-title">Draw Obstacle</div>
-      <div class="tool-grid">
-        <button class="tool-btn active" data-tool="freehand">
-          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 12 Q5 4 12 2" stroke="#7aa2f7" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>
-          Freehand
-        </button>
-        <button class="tool-btn" data-tool="erase">
-          <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="5" width="10" height="6" rx="1" stroke="#f7768e" stroke-width="1.5" fill="none"/></svg>
-          Eraser
-        </button>
-        <button class="tool-btn" data-tool="line">
-          <svg width="14" height="14" viewBox="0 0 14 14"><line x1="2" y1="12" x2="12" y2="2" stroke="#7aa2f7" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Line
-        </button>
-        <button class="tool-btn" data-tool="rect">
-          <svg width="14" height="14" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="8" rx="1" stroke="#7aa2f7" stroke-width="1.5" fill="none"/></svg>
-          Rect
-        </button>
-        <button class="tool-btn" data-tool="ellipse">
-          <svg width="14" height="14" viewBox="0 0 14 14"><ellipse cx="7" cy="7" rx="5" ry="3.5" stroke="#7aa2f7" stroke-width="1.5" fill="none"/></svg>
-          Ellipse
-        </button>
-        <button class="tool-btn" data-tool="bezier">
-          <svg width="14" height="14" viewBox="0 0 14 14"><path d="M2 12 C4 2 10 2 12 12" stroke="#7aa2f7" stroke-width="1.5" fill="none"/><circle cx="2" cy="12" r="1.5" fill="#f7768e"/></svg>
-          Bézier
-        </button>
+      <div class="mini-bar-wrap">
+        <div class="mini-bar-label">Cd</div>
+        <div class="mini-bar-track"><div id="bar-drag" class="mini-bar drag-bar"></div></div>
       </div>
-      <div style="display:flex;gap:4px;margin-top:6px;">
-        <button class="action-btn primary" id="btn-bez-commit" style="margin:0;flex:1">✓ Commit</button>
-        <button class="action-btn" id="btn-bez-clear" style="margin:0;flex:1">✕ Clear</button>
+      <div class="mini-bar-wrap">
+        <div class="mini-bar-label">|Cl|</div>
+        <div class="mini-bar-track"><div id="bar-lift" class="mini-bar lift-bar"></div></div>
       </div>
     </div>
 
-    <!-- 3D Import -->
-    <div class="section">
-      <div class="section-title">Import 3D Model</div>
-      <div id="drop-zone" class="drop-zone">
-        <div class="drop-icon">📦</div>
-        <div class="drop-text">Drop OBJ or STL file<br><span>or click to browse</span></div>
-        <input type="file" id="file-input" accept=".obj,.stl" style="display:none">
-      </div>
-      <div id="import-status" class="import-status"></div>
-      <div class="section-title" style="margin-top:8px">Projection axis</div>
-      <div style="display:flex;gap:4px">
-        <button class="axis-btn active" data-axis="xz">Side (XZ)</button>
-        <button class="axis-btn" data-axis="xy">Front (XY)</button>
-        <button class="axis-btn" data-axis="zy">Top (ZY)</button>
-      </div>
-    </div>
-
-    <!-- Brush settings -->
-    <div class="section">
-      <div class="section-title">Brush</div>
-      <div class="param-row">
-        <div class="param-label">Radius <span id="val-brush">4</span>px</div>
-        <input type="range" id="sl-brush" min="1" max="20" value="4">
-      </div>
-      <div class="param-row">
-        <div class="param-label">Smoothing <span id="val-smooth">0.5</span></div>
-        <input type="range" id="sl-smooth" min="0" max="1" step="0.05" value="0.5">
-      </div>
-    </div>
-
-    <!-- Flow parameters -->
-    <div class="section">
-      <div class="section-title">Flow Parameters</div>
+    <!-- Flow params -->
+    <div class="panel-section">
+      <div class="panel-title">FLOW PARAMETERS</div>
       <div class="param-row">
         <div class="param-label">Relaxation ω <span id="val-omega">1.70</span></div>
         <input type="range" id="sl-omega" min="0.6" max="1.98" step="0.01" value="1.7">
@@ -167,81 +163,167 @@
         <div class="param-label">Angle of attack <span id="val-angle">0°</span></div>
         <input type="range" id="sl-angle" min="-25" max="25" step="1" value="0">
       </div>
+      <div class="param-row">
+        <div class="param-label">Steps/frame <span id="val-spf">4</span></div>
+        <input type="range" id="sl-spf" min="1" max="12" step="1" value="4">
+      </div>
     </div>
 
-    <!-- Visualization -->
-    <div class="section">
-      <div class="section-title">Visualization</div>
-      <div class="viz-grid">
-        <button class="viz-btn active" data-viz="0">
-          <span class="dot" style="background:linear-gradient(90deg,#050384,#c03d74,#f0f421)"></span> Speed |u|
+    <!-- 3D import -->
+    <div class="panel-section">
+      <div class="panel-title">IMPORT 3D MODEL</div>
+      <div id="drop-zone" class="drop-zone">
+        <div class="drop-icon">📦</div>
+        <div>Drop OBJ / STL<br><span>or click to browse</span></div>
+        <input type="file" id="file-input" accept=".obj,.stl" style="display:none">
+      </div>
+      <div id="import-status" class="import-status"></div>
+      <div class="axis-row">
+        <button class="axis-btn active" data-axis="xz">Side XZ</button>
+        <button class="axis-btn" data-axis="xy">Front XY</button>
+        <button class="axis-btn" data-axis="zy">Top ZY</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── Viewport ───────────────────────── -->
+  <div class="viewport-wrap" id="viewport-wrap">
+
+    <!-- Viewport toolbar -->
+    <div class="vp-toolbar">
+      <span class="vp-label" id="vp-mode-label">3D PERSPECTIVE</span>
+      <div style="flex:1"></div>
+      <span class="vp-hint">Left drag: Orbit &nbsp;|&nbsp; Right drag: Pan &nbsp;|&nbsp; Scroll: Zoom</span>
+    </div>
+
+    <!-- Main canvas (WebGL — both LBM + 3D viewer share this context) -->
+    <canvas id="main-canvas"></canvas>
+
+    <!-- Overlay canvases (handle/bezier hints) -->
+    <canvas id="handle-canvas" style="position:absolute;top:32px;left:0;pointer-events:none"></canvas>
+
+    <!-- Colorbar legend -->
+    <div id="legend">
+      <div id="legend-mode">Speed |u|</div>
+      <div id="legend-bar"></div>
+      <div id="legend-labels"><span id="legend-min">0</span><span id="legend-max">fast</span></div>
+    </div>
+
+    <!-- Angle compass -->
+    <div id="compass">
+      <canvas id="compass-canvas" width="56" height="56"></canvas>
+      <div id="compass-label">0°</div>
+    </div>
+
+    <!-- Tooltip -->
+    <div id="tooltip"></div>
+  </div>
+
+  <!-- ── Right panel ─────────────────────── -->
+  <aside class="panel panel-right">
+
+    <!-- Draw tools -->
+    <div class="panel-section">
+      <div class="panel-title">DRAW OBSTACLE</div>
+      <div class="tool-col">
+        <button class="tool-row active" data-tool="freehand">
+          <svg width="12" height="12" viewBox="0 0 14 14"><path d="M2 12 Q5 4 12 2" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+          Freehand
         </button>
-        <button class="viz-btn" data-viz="1">
-          <span class="dot" style="background:linear-gradient(90deg,#042db6,#ccc,#c21904)"></span> Pressure
+        <button class="tool-row" data-tool="line">
+          <svg width="12" height="12" viewBox="0 0 14 14"><line x1="2" y1="12" x2="12" y2="2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Line
         </button>
-        <button class="viz-btn" data-viz="2">
-          <span class="dot" style="background:linear-gradient(90deg,#042db6,#ccc,#c21904)"></span> Vorticity
+        <button class="tool-row" data-tool="rect">
+          <svg width="12" height="12" viewBox="0 0 14 14"><rect x="2" y="3" width="10" height="8" rx="1" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+          Rectangle
         </button>
-        <button class="viz-btn" data-viz="3">
-          <span class="dot" style="background:linear-gradient(90deg,#270c52,#1e8f82,#faed24)"></span> Ux stream
+        <button class="tool-row" data-tool="ellipse">
+          <svg width="12" height="12" viewBox="0 0 14 14"><ellipse cx="7" cy="7" rx="5" ry="3.5" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+          Ellipse
+        </button>
+        <button class="tool-row" data-tool="bezier">
+          <svg width="12" height="12" viewBox="0 0 14 14"><path d="M2 12 C4 2 10 2 12 12" stroke="currentColor" stroke-width="1.8" fill="none"/></svg>
+          Bézier Curve
+        </button>
+        <button class="tool-row" data-tool="erase">
+          <svg width="12" height="12" viewBox="0 0 14 14"><path d="M3 11 L11 3 M8 2 L12 6 L5 13 L1 13 L1 9 Z" stroke="currentColor" stroke-width="1.5" fill="none"/></svg>
+          Eraser
         </button>
       </div>
       <div class="param-row" style="margin-top:8px">
-        <div class="param-label">Scale <span id="val-scale">0.15</span></div>
+        <div class="param-label">Brush radius <span id="val-brush">4</span></div>
+        <input type="range" id="sl-brush" min="1" max="20" value="4">
+      </div>
+      <div class="param-row">
+        <div class="param-label">Smoothing <span id="val-smooth">0.5</span></div>
+        <input type="range" id="sl-smooth" min="0" max="1" step="0.05" value="0.5">
+      </div>
+    </div>
+
+    <!-- Visualization -->
+    <div class="panel-section">
+      <div class="panel-title">VISUALIZATION</div>
+      <div class="tool-col">
+        <button class="tool-row active" data-viz="0">Speed |u|</button>
+        <button class="tool-row" data-viz="1">Pressure ρ</button>
+        <button class="tool-row" data-viz="2">Vorticity ω</button>
+        <button class="tool-row" data-viz="3">Ux Component</button>
+      </div>
+      <div class="param-row" style="margin-top:8px">
+        <div class="param-label">Color scale <span id="val-scale">0.15</span></div>
         <input type="range" id="sl-scale" min="0.02" max="0.5" step="0.01" value="0.15">
       </div>
     </div>
 
     <!-- Streamlines -->
-    <div class="section">
-      <div class="section-title">Streamlines</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;color:#9aa5ce">
+    <div class="panel-section">
+      <div class="panel-title">STREAMLINES</div>
+      <div class="toggle-row">
         <input type="checkbox" id="chk-streamlines" checked>
         <label for="chk-streamlines">Show particles</label>
       </div>
       <div class="param-row">
-        <div class="param-label">Count</div>
+        <div class="param-label">Particle count</div>
         <input type="range" id="sl-particles" min="50" max="800" step="50" value="300">
       </div>
     </div>
 
-    <!-- Actions -->
-    <div class="section">
-      <div class="section-title">Actions</div>
-      <button class="action-btn primary" id="btn-refresh">⟳ Refresh Sim</button>
-      <button class="action-btn" id="btn-reset">↺ Reset Flow</button>
-      <button class="action-btn danger" id="btn-clear-obs">✕ Clear All</button>
-      <button class="action-btn" id="btn-pause">⏸ Pause</button>
-      <button class="action-btn" id="btn-export">⬇ Export PNG</button>
+    <!-- 3D viewer -->
+    <div class="panel-section">
+      <div class="panel-title">3D VIEWER</div>
+      <div class="toggle-row">
+        <input type="checkbox" id="chk-3d" checked>
+        <label for="chk-3d">3D orbit mode</label>
+      </div>
+      <div class="toggle-row">
+        <input type="checkbox" id="chk-extrude" checked>
+        <label for="chk-extrude">Extrude obstacle</label>
+      </div>
+      <button class="btn-ghost" id="btn-view-persp2">⟁ Perspective</button>
+      <button class="btn-ghost" id="btn-view-top2">⬜ Top View</button>
+      <button class="btn-ghost" id="btn-view-side2">◧ Side View</button>
+      <button class="btn-ghost" id="btn-view-front2">◫ Front View</button>
     </div>
 
   </aside>
 
-  <!-- ── Canvas Area ──────────────────────────────────── -->
-  <div class="canvas-wrap" id="canvas-wrap">
-    <canvas id="sim-canvas"></canvas>
-    <canvas id="stream-canvas" style="pointer-events:none;position:absolute;top:0;left:0"></canvas>
-    <canvas id="handle-canvas" style="pointer-events:none;position:absolute;top:0;left:0"></canvas>
-    <canvas id="draw-canvas"   style="pointer-events:none;position:absolute;top:0;left:0"></canvas>
+</div>
 
-    <div class="tunnel-label" id="label-inlet">↠ INLET</div>
-    <div class="tunnel-label" id="label-outlet">OUTLET ↠</div>
-
-    <div id="legend">
-      <div id="legend-mode" style="font-size:9px;color:#9aa5ce;margin-bottom:2px">Speed</div>
-      <div id="legend-bar" style="width:100px;height:8px;border-radius:2px"></div>
-      <div id="legend-labels" style="display:flex;justify-content:space-between;width:100px">
-        <span id="legend-min">0</span><span id="legend-max">u_max</span>
-      </div>
-    </div>
-
-    <div id="angle-indicator">
-      <canvas id="angle-canvas" width="60" height="60"></canvas>
-    </div>
-
-    <div id="tooltip"></div>
-  </div>
-
+<!-- ── Status bar ──────────────────────────────────────────────────────── -->
+<div id="statusbar">
+  <span id="sb-preset">GT3 Racing</span>
+  <span class="sb-sep">|</span>
+  <span id="sb-tool">Tool: Freehand</span>
+  <span class="sb-sep">|</span>
+  <span id="sb-coords">x:— y:—</span>
+  <span class="sb-sep">|</span>
+  <span id="sb-obs">Obstacles: 0 cells</span>
+  <div style="flex:1"></div>
+  <button class="action-btn-sm danger" id="btn-clear-obs2">✕ Clear</button>
+  <button class="action-btn-sm" id="btn-reset2">↺ Reset Flow</button>
+  <button class="action-btn-sm primary" id="btn-refresh2">⟳ Refresh</button>
 </div>
 
 <script type="module" src="main.js"></script>

@@ -38,7 +38,7 @@ export class DrawingTool {
   // We find the WebGL canvas inside it to get the exact rendered bounds
   _toGrid(clientX, clientY) {
     // Use the WebGL sim canvas for pixel-accurate bounds
-    const simEl = document.getElementById('sim-canvas');
+    const simEl = document.getElementById('main-canvas');
     const rect = simEl ? simEl.getBoundingClientRect() : this.simCanvas.getBoundingClientRect();
     const px = (clientX - rect.left) / rect.width  * this.solver.W;
     const py = (1 - (clientY - rect.top) / rect.height) * this.solver.H;
