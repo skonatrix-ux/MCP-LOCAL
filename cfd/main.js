@@ -218,6 +218,10 @@ document.getElementById('chk-streamlines').addEventListener('change', function()
 });
 
 // ── Action buttons ────────────────────────────────────────────────────
+document.getElementById('btn-refresh').addEventListener('click', () => {
+  applyPreset(currentPreset);
+});
+
 document.getElementById('btn-reset').addEventListener('click', () => {
   solver.reset(); forces.reset();
   streamlines._spawnAll(); streamlines.clear();
