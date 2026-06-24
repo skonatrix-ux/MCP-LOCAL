@@ -1,12 +1,12 @@
 import { Composition } from "remotion";
-import { MyVideo } from "./MyVideo";
+import { MyVideo, TOTAL_FRAMES } from "./MyVideo";
 
 export const RemotionRoot = () => {
   return (
     <Composition
-      id="MyVideo"
+      id="TealBallBounce"
       component={MyVideo}
-      durationInFrames={150}
+      durationInFrames={TOTAL_FRAMES}
       fps={30}
       width={1280}
       height={720}
