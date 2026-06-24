@@ -34,10 +34,14 @@ export class DrawingTool {
   }
 
   // Canvas pixel → grid cell coordinate
+  // simCanvas is actually the event target (canvasWrap div or overlay canvas)
+  // We find the WebGL canvas inside it to get the exact rendered bounds
   _toGrid(clientX, clientY) {
-    const rect = this.simCanvas.getBoundingClientRect();
+    // Use the WebGL sim canvas for pixel-accurate bounds
+    const simEl = document.getElementById('sim-canvas');
+    const rect = simEl ? simEl.getBoundingClientRect() : this.simCanvas.getBoundingClientRect();
     const px = (clientX - rect.left) / rect.width  * this.solver.W;
-    const py = (1 - (clientY - rect.top)  / rect.height) * this.solver.H;
+    const py = (1 - (clientY - rect.top) / rect.height) * this.solver.H;
     return {x: px, y: py};
   }
 

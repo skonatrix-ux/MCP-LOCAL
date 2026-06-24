@@ -43,8 +43,8 @@ try {
 }
 
 // ── Drawing tool ─────────────────────────────────────────────────────
-// Bind drawing to the top overlay canvas so it receives pointer events
-const draw = new DrawingTool(solver, drawCanvas, handleCanvas, tooltip);
+// Bind drawing to the canvas wrap div — covers the full tunnel area
+const draw = new DrawingTool(solver, canvasWrap, handleCanvas, tooltip);
 
 // ── Streamlines ──────────────────────────────────────────────────────
 let streamlines;
